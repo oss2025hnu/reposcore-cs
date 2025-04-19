@@ -71,3 +71,7 @@ Verbose mode is enabled.
 ## 프로젝트 기여 및 작업 규칙
 
 👉 [프로젝트 기여 및 작업 규칙](docs/project_guidelines.md) 문서를 참고 부탁드립니다.
+
+## GITHUB Token 생성 방법
+
+👉 [GITHUB Token 생성 방법](docs/github-token-guide.md) 문서를 참고 부탁드립니다.
