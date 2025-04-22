@@ -1,0 +1,10 @@
+{
+    "featureLabels": [
+        "bug",
+        "refactor",
+        "performance",
+        "style",
+        "documentation"
+    ]
+}
+  

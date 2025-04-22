@@ -1,36 +1,57 @@
 ﻿using Cocona;
-// using System;
-//using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 
-CoconaApp.Run((
-    [Argument] string[] repository,
-    [Option('v', Description = "자세한 로그 출력을 활성화합니다.")] bool verbose
-) =>
+class Program
 {
-    Console.WriteLine($"Repository: {String.Join("\n ", repository)}");
-
-    if (verbose)
+    public static void Main(string[] args)
     {
-        Console.WriteLine("Verbose mode is enabled.");
+        CoconaApp.Run<Program>(args);
     }
 
-    if (repository.Length != 2)
+    public void Run(
+        [Argument] string[] repository,
+        [Option('v')] bool verbose = false,
+        [Option("labels")] string labelConfigPath = "labels.json"
+    )
     {
-        Console.WriteLine("❗ repository 인자는 'owner repo' 순서로 2개가 필요합니다.");
-        Environment.Exit(1);  // 오류 발생 시 exit code 1로 종료
-        return;
+        Console.WriteLine($"Repositories: {string.Join(", ", repository)}");
+
+        if (verbose)
+        {
+            Console.WriteLine("Verbose mode ON");
+        }
+
+        // 1. 라벨 설정 읽기
+        var labelConfig = LabelLoader.LoadLabelConfig(labelConfigPath);
+
+        // 2. 샘플 라벨들 (이 부분은 실제 PR이나 이슈 분석 코드에서 대체)
+        var sampleLabels = new[] { "bug", "refactor", "style", "invalid" };
+
+        // 3. 중복 제거된 라벨 카운팅
+        var labelCounts = new Dictionary<string, int>();
+        foreach (var label in sampleLabels)
+        {
+            CountLabel(label, labelCounts, labelConfig.FeatureLabels);
+        }
+
+        // 4. 출력
+        Console.WriteLine("=== Label Counts ===");
+        foreach (var kvp in labelCounts)
+        {
+            Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+        }
     }
 
-    try
+    private static void CountLabel(string labelName, Dictionary<string, int> counts, List<string> validLabels)
     {
-        // var analyzer = new GitHubAnalyzer();
-        // analyzer.Analyze(repository[0], repository[1]);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❗ 오류 발생: {ex.Message}");
-        Environment.Exit(1);  // 예외 발생 시 exit code 1로 종료
-    }
+        string lower = labelName.ToLower();
 
-    Environment.Exit(0);  // 정상 종료 시 exit code 0으로 종료
-});
+        if (!validLabels.Contains(lower)) return;
+
+        if (!counts.ContainsKey(lower))
+            counts[lower] = 0;
+
+        counts[lower]++;
+    }
+}
