@@ -1,7 +1,7 @@
 # GITHUB Token 생성 방법
 ---
 
-# 1. GitHub 설정 페이지 접
+# 1. GitHub 설정 페이지 접근
 Git 웹사이트에 로그인 이후 우측 상단 프로필 사진을 클릭 이후
 드롭다운 메뉴에서 **Settings**을 클릭합니다
 ![setting](images/setting.png)
@@ -12,7 +12,9 @@ Git 웹사이트에 로그인 이후 우측 상단 프로필 사진을 클릭 �
 
 # 3. Personal access token 메뉴
 **Personal access token** 클릭하면 두개의 토큰 생성 옵션이 존재하는 것을 볼 수 있습니다
+
 설명을 참고하여 3-1, 3-2 중 하나를 선택하여 토큰을 생성하시면 됩니다
+
 ![personal_access](images/pesonal_access_token.png)
 
 - Fine-grained token : classic 토큰에 비해 보안성이 높습니다
@@ -40,4 +42,4 @@ Git 웹사이트에 로그인 이후 우측 상단 프로필 사진을 클릭 �
 ![token_create](images/create_token.png)
 
 # 주의 
-CodeSpace환경에서 Token값 저장시, PR 과정에서 Token값도 PR되지 않게 주의하시길 바랍니다)
+CodeSpace환경에서 Token값 저장시, PR 과정에서 Token값도 PR되지 않게 주의하시길 바랍니다
