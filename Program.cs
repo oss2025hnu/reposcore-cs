@@ -58,8 +58,12 @@ CoconaApp.Run((
     }
 
     try
-    {
-        // GitHubAnalyzer 사용 (주석 해제)
+    {if (string.IsNullOrEmpty(token))
+{
+    Console.WriteLine("Error: --token 옵션을 입력해야 합니다."); // 토큰이 부족하면 오류 발생
+    return; // 방송종료
+}
+
         var analyzer = new GitHubAnalyzer(token); // 토큰을 전달
         analyzer.Analyze(repos[0], repos[1]);   // PR과 이슈 분석을 실행
     }
