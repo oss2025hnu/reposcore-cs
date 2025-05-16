@@ -27,7 +27,18 @@ CoconaApp.Run((
     {
         Console.WriteLine("Verbose mode is enabled.");
     }
+    var formats = string.IsNullOrWhiteSpace(format)
+        ? new List<string> { "json" }
+        : new List<string>(format.Split(',', StringSplitOptions.RemoveEmptyEntries));
 
+    var supportedFormats = new HashSet<string> { "json", "csv" };
+    var invalidFormats = formats.FindAll(f => !supportedFormats.Contains(f.ToLowerInvariant()));
+    if (invalidFormats.Count > 0)
+    {
+        Console.WriteLine($"! 지원되지 않는 출력 형식입니다: {string.Join(", ", invalidFormats)}");
+        Console.WriteLine($"  (지원 형식: {string.Join(", ", supportedFormats)})");
+        Environment.Exit(1);
+    }
     try
     {
         var client = new GitHubClient(new ProductHeaderValue("CoconaApp"));
@@ -56,11 +67,6 @@ CoconaApp.Run((
 
     try
     {
-        // format 옵션을 쉼표로 분리하여 리스트로 변환
-        var formats = string.IsNullOrWhiteSpace(format)
-            ? new List<string> { "json" }
-            : new List<string>(format.Split(',', StringSplitOptions.RemoveEmptyEntries));
-
         // 출력 디렉토리 기본값 처리
         var outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
 
