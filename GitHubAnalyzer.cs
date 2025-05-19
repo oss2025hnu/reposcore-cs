@@ -78,3 +78,64 @@ public class GitHubAnalyzer
             foreach (var label in targetLabels)
             {
                 Console.WriteLine($"- {char.ToUpper(label[0]) + label.Substring(1)} PRs: {labelCounts[label]}");
+            }
+
+            Console.WriteLine("\n✅ Issues");
+            foreach (var label in targetLabels)
+            {
+                Console.WriteLine($"- {char.ToUpper(label[0]) + label.Substring(1)} Issues: {labelCounts[label]}");
+            }
+
+            GenerateOutputFiles(outputDir, formats);
+        }
+        catch (RateLimitExceededException)
+        {
+            Console.WriteLine("❗ API 호출 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도해주세요.");
+            Environment.Exit(1);
+        }
+        catch (AuthorizationException)
+        {
+            Console.WriteLine("❗ 인증 실패: 올바른 토큰을 사용했는지 확인하세요.");
+            Environment.Exit(1);
+        }
+        catch (NotFoundException)
+        {
+            Console.WriteLine("❗ 저장소를 찾을 수 없습니다. owner/repo 이름을 확인하세요.");
+            Environment.Exit(1);
+        }
+        catch (Exception ex)
+        {
+            HandleError(ex);
+        }
+    }
+
+    private void GenerateOutputFiles(string outputDir, List<string> formats)
+    {
+        try
+        {
+            Directory.CreateDirectory(outputDir);
+
+            var invalidChars = Path.GetInvalidFileNameChars();
+
+            foreach (var format in formats)
+            {
+                if (format.Any(c => invalidChars.Contains(c)))
+                {
+                    Console.WriteLine($"❗ 오류: '{format}' 형식에는 파일 이름으로 사용할 수 없는 문자가 포함되어 있습니다.");
+                    Environment.Exit(1);
+                }
+
+                string fileName = $"result.{format.ToLower()}";
+                string filePath = Path.Combine(outputDir, fileName);
+
+                File.WriteAllText(filePath, string.Empty);
+                Console.WriteLine($"📁 생성된 파일: {filePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❗ 출력 파일 생성 중 오류: {ex.Message}");
+            Environment.Exit(1);
+        }
+    }
+}
