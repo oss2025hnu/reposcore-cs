@@ -31,7 +31,7 @@ public class GitHubAnalyzer
         Environment.Exit(1);
     }
 
-    public void Analyze(string owner, string repo, string outputDir, List<string> formats)
+    public Dictionary<string, int> Analyze(string owner, string repo, string outputDir, List<string> formats)
     {
         try
         {
@@ -86,7 +86,7 @@ public class GitHubAnalyzer
                 Console.WriteLine($"- {char.ToUpper(label[0]) + label.Substring(1)} Issues: {labelCounts[label]}");
             }
 
-            GenerateOutputFiles(outputDir, formats);
+            return labelCounts;
         }
         catch (RateLimitExceededException)
         {
@@ -107,6 +107,7 @@ public class GitHubAnalyzer
         {
             HandleError(ex);
         }
+        return new Dictionary<string, int>();
     }
 
     private void GenerateOutputFiles(string outputDir, List<string> formats)
