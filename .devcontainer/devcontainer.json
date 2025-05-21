@@ -5,7 +5,8 @@
     "vscode": {
       "extensions": [
         "ms-dotnettools.csharp",
-        "ms-dotnettools.csdevkit"
+        "ms-dotnettools.csdevkit",
+        "mechatroner.rainbow-csv"
       ]
     }
   },

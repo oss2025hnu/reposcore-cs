@@ -74,16 +74,22 @@ xUnit, NUnit, MSTest 등 테스트 프레임워크; Windows, macOS, Linux 플랫
 .csproj 파일 기반 프로젝트를 자동으로 인식 및 빌드
 
 ---
+## 📚 가이드 문서 모음
 
-## [.NET 가이드](docs/dotNet-guide.md)
+### [.NET 가이드](docs/dotNet-guide.md)
+- .NET 콘솔 애플리케이션 생성, 빌드, 실행, 테스트 과정 안내.
 
-## [프로젝트 기여 및 작업 규칙](docs/project_guidelines.md)
+### [프로젝트 기여 및 작업 규칙](docs/project_guidelines.md)
+- 프로젝트 규칙과 참여 방법.
 
-## [Github Token 생성 방법](docs/github-token-guide.md)
+### [Github Token 생성 방법](docs/github-token-guide.md)
+- GitHub 토큰 생성 및 설정.
 
-## [Octokit 가이드](docs/octokit_guide.md)
+### [Octokit 가이드](docs/octokit_guide.md)
+- GitHub API를 호출 또는 저장소 및 이슈를 관리하는 과정 안내.
 
-## [포크 동기화 가이드](docs/fork_sync_guide.md)
+### [포크 동기화 가이드](docs/fork_sync_guide.md)
+- 포크 저장소 동기화 가이드.
 
 ## [소스 파일 추가 가이드](docs/add_cs_files_guide.md)
 

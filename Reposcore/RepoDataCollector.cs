@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-public class GitHubAnalyzer
+// 현재 이름만 바꾼 거고 싹 다 재설계해야 함
+public class RepoDataCollector // 1단계: 저장소에서 필요한 데이터를 가져오는 역할
 {
     private readonly GitHubClient _client;
 
-    public GitHubAnalyzer(string token)
+    public RepoDataCollector(string token)
     {
         _client = CreateClient("reposcore-cs", token);
     }
@@ -31,7 +32,7 @@ public class GitHubAnalyzer
         Environment.Exit(1);
     }
 
-    public void Analyze(string owner, string repo, string outputDir, List<string> formats)
+    public Dictionary<string, int> Collect(string owner, string repo, string outputDir, List<string> formats)
     {
         try
         {
@@ -86,7 +87,7 @@ public class GitHubAnalyzer
                 Console.WriteLine($"- {char.ToUpper(label[0]) + label.Substring(1)} Issues: {labelCounts[label]}");
             }
 
-            GenerateOutputFiles(outputDir, formats);
+            return labelCounts;
         }
         catch (RateLimitExceededException)
         {
@@ -107,8 +108,10 @@ public class GitHubAnalyzer
         {
             HandleError(ex);
         }
+        return new Dictionary<string, int>();
     }
 
+    // 결과물 만들어내는 이거는 3단계에서 할 일이니까 이것도 다른 곳으로 옮겨야 함
     private void GenerateOutputFiles(string outputDir, List<string> formats)
     {
         try
