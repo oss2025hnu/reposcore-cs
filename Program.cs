@@ -61,7 +61,7 @@ CoconaApp.Run((
             : new List<string>(format.Split(',', StringSplitOptions.RemoveEmptyEntries));
 
         var analyzer = new GitHubAnalyzer(token!); // ✅ null-forgiving 연산자 적용
-        analyzer.Analyze(owner, repo, output, formats);
+        analyzer.Analyze(owner, repo, output, formats); // outputDir에서 output으로 수정
     }
     catch (Exception ex)
     {
