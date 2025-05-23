@@ -94,3 +94,6 @@ xUnit, NUnit, MSTest 등 테스트 프레임워크; Windows, macOS, Linux 플랫
 ### [소스 파일 추가 가이드](docs/add_cs_files_guide.md)
 - 프로그램의 시작점을 포함하는 `Program.cs`외에 다른 확장자 `.cs`인 C# 소스코드 파일을 추가하는 방법 안내.
 
+### [Program.cs 가이드](docs/program.cs_guide.md)
+- Program.cs 파일에 대한 가이드 문서.
+
