@@ -11,6 +11,15 @@ CoconaApp.Run((
     [Option('f', Description = "출력 형식을 지정합니다. (기본값: table)")] string format = "table"
 ) =>
 {
+    var supportedFormats = new HashSet<string> { "json", "csv" };
+
+    if (!supportedFormats.Contains(format.ToLowerInvariant()))
+    {
+        Console.WriteLine($"지원되지 않는 출력 형식입니다: {format}");
+        Console.WriteLine("지원 형식: json, csv");
+        Environment.Exit(1);
+    }
+
     // 더미 데이타가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
     var repo1Activities = DummyData.repo1Activities;
     Console.WriteLine("repo1Activities:"+repo1Activities.Count);
