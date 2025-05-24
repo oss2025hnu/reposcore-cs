@@ -122,6 +122,7 @@ static List<string> getValidFormat(string format)
             Console.Write($"{unValidFormat} ");
         }
         Console.Write("\n");
+        Environment.Exit(1);
     }
 
     // 유효한 포맷이 존재 X
