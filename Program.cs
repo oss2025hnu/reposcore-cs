@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Octokit;
+using Reposcore;
 
 CoconaApp.Run((
     [Argument] string[] repos,
