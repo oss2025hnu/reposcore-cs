@@ -91,7 +91,20 @@ public class RepoDataCollector // 1단계: 저장소에서 필요한 데이터�
         }
         catch (RateLimitExceededException)
         {
-            Console.WriteLine("❗ API 호출 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도해주세요.");
+            try
+            {
+                var rateLimits = _client.Miscellaneous.GetRateLimits().Result;
+                var coreRateLimit = rateLimits.Rate;
+                var resetTime = coreRateLimit.Reset; // UTC DateTime
+                var secondsUntilReset = (int)(resetTime - DateTimeOffset.UtcNow).TotalSeconds;
+
+                Console.WriteLine($"❗ API 호출 한도(Rate Limit)를 초과했습니다. {secondsUntilReset}초 후 재시도 가능합니다 (약 {resetTime.LocalDateTime} 기준).");
+            }
+            catch (Exception innerEx)
+            {
+                Console.WriteLine($"❗ API 호출 한도 초과, 재시도 시간을 가져오는 데 실패했습니다: {innerEx.Message}");
+            }
+
             Environment.Exit(1);
         }
         catch (AuthorizationException)
