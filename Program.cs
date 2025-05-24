@@ -14,87 +14,91 @@ CoconaApp.Run((
 {
     // 더미 데이타가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
     var repo1Activities = DummyData.repo1Activities;
-    Console.WriteLine("repo1Activities:"+repo1Activities.Count);
+    Console.WriteLine("repo1Activities:" + repo1Activities.Count);
     var repo2Activities = DummyData.repo2Activities;
-    Console.WriteLine("repo2Activities:"+repo2Activities.Count);
+    Console.WriteLine("repo2Activities:" + repo2Activities.Count);
 
-    if (repos.Length != 2)
+    foreach (var repoPath in repos)
     {
-        Console.WriteLine("! repository 인자는 'owner repo' 순서로 2개가 필요합니다.");
-        Environment.Exit(1);
-        return;
-    }
-
-    string owner = repos[0];
-    string repo = repos[1];
-
-    Console.WriteLine($"Repository: {string.Join("\n ", repos)}");
-
-    if (verbose)
-    {
-        Console.WriteLine("Verbose mode is enabled.");
-    }
-
-    try
-    {
-        var client = new GitHubClient(new ProductHeaderValue("CoconaApp"));
-
-        if (!string.IsNullOrEmpty(token))
-        {   
-            File.WriteAllText(".env", $"GITHUB_TOKEN={token}\n");
-            Console.WriteLine(".env의 토큰을 갱신합니다.");
-            client.Credentials = new Credentials(token);
-        }
-        else if (File.Exists(".env"))
-        {   
-            Console.WriteLine(".env의 토큰으로 인증을 진행합니다.");
-            Env.Load();
-            token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-            client.Credentials = new Credentials(token);
-        }
-
-        var repository = client.Repository.Get(owner, repo).GetAwaiter().GetResult();
-
-        Console.WriteLine($"[INFO] Repository Name: {repository.Name}");
-        Console.WriteLine($"[INFO] Full Name: {repository.FullName}");
-        Console.WriteLine($"[INFO] Description: {repository.Description}");
-        Console.WriteLine($"[INFO] Stars: {repository.StargazersCount}");
-        Console.WriteLine($"[INFO] Forks: {repository.ForksCount}");
-        Console.WriteLine($"[INFO] Open Issues: {repository.OpenIssuesCount}");
-        Console.WriteLine($"[INFO] Language: {repository.Language}");
-        Console.WriteLine($"[INFO] URL: {repository.HtmlUrl}");
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine($"! 오류 발생: {e.Message}");
-        Environment.Exit(1);
-    }
-
-    try
-    {
-        var formats = getValidFormat(format);
-
-        var outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
-
-        var dataCollector = new RepoDataCollector(token!); // ✅ null-forgiving 연산자 적용
-        dataCollector.Collect(owner, repo, outputDir, formats);
-
-        // ===== 파일 생성 기능 구현 후 제거 =====
-        Console.WriteLine("\n===생성되는 포맷===");
-        foreach (var fm in formats)
+        if (!repoPath.Contains('/'))
         {
-            Console.WriteLine($"-{fm}");
+            Console.WriteLine($"! 저장소 인자 '{repoPath}'는 'owner/repo' 형식이어야 합니다.");
+            continue;
         }
-        Console.WriteLine("\n파일 생성 기능이 아직 구현되지 않았습니다.");
-        // ===== 파일 생성 기능 구현 후 제거 =====
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"! 오류 발생: {ex.Message}");
-        Environment.Exit(1);
-    }
 
-    Environment.Exit(0);
+        var parts = repoPath.Split('/');
+        if (parts.Length != 2)
+        {
+            Console.WriteLine($"! 저장소 인자 '{repoPath}'는 'owner/repo' 형식이어야 합니다.");
+            continue;
+        }
+
+        string owner = parts[0];
+        string repo = parts[1];
+
+        Console.WriteLine($"\n🔍 처리 중: {owner}/{repo}");
+
+        try
+        {
+            var client = new GitHubClient(new ProductHeaderValue("CoconaApp"));
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                File.WriteAllText(".env", $"GITHUB_TOKEN={token}\n");
+                Console.WriteLine(".env의 토큰을 갱신합니다.");
+                client.Credentials = new Credentials(token);
+            }
+            else if (File.Exists(".env"))
+            {
+                Console.WriteLine(".env의 토큰으로 인증을 진행합니다.");
+                Env.Load();
+                token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+                client.Credentials = new Credentials(token);
+            }
+
+            var repository = client.Repository.Get(owner, repo).GetAwaiter().GetResult();
+
+            Console.WriteLine($"[INFO] Repository Name: {repository.Name}");
+            Console.WriteLine($"[INFO] Full Name: {repository.FullName}");
+            Console.WriteLine($"[INFO] Description: {repository.Description}");
+            Console.WriteLine($"[INFO] Stars: {repository.StargazersCount}");
+            Console.WriteLine($"[INFO] Forks: {repository.ForksCount}");
+            Console.WriteLine($"[INFO] Open Issues: {repository.OpenIssuesCount}");
+            Console.WriteLine($"[INFO] Language: {repository.Language}");
+            Console.WriteLine($"[INFO] URL: {repository.HtmlUrl}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"! 오류 발생: {e.Message}");
+            Environment.Exit(1);
+        }
+
+        try
+        {
+            var formats = getValidFormat(format);
+
+            var outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
+
+            var dataCollector = new RepoDataCollector(token!); // ✅ null-forgiving 연산자 적용
+            dataCollector.Collect(owner, repo, outputDir, formats);
+
+            // ===== 파일 생성 기능 구현 후 제거 =====
+            Console.WriteLine("\n===생성되는 포맷===");
+            foreach (var fm in formats)
+            {
+                Console.WriteLine($"-{fm}");
+            }
+            Console.WriteLine("\n파일 생성 기능이 아직 구현되지 않았습니다.");
+            // ===== 파일 생성 기능 구현 후 제거 =====
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"! 오류 발생: {ex.Message}");
+            Environment.Exit(1);
+        }
+
+        Environment.Exit(0);
+    }
 });
 
 static List<string> getValidFormat(string format) 
