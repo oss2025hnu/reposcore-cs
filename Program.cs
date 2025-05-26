@@ -110,12 +110,23 @@ static List<string> checkFormat(string[] format)
 
     var validFormats = new List<string> { };
     var unValidFormats = new List<string> { };
+    char[] invalidChars = Path.GetInvalidFileNameChars();
 
     foreach (var fm in format)
     {
         var f = fm.Trim().ToLowerInvariant(); // 대소문자 구분 없이 유효성 검사
-        if (FormatList.Contains(f)) validFormats.Add(f);
-        else unValidFormats.Add(f);
+        if (f.IndexOfAny(invalidChars) >= 0)
+        {
+            Console.WriteLine($"포맷 '{f}'에는 파일명으로 사용할 수 없는 문자가 포함되어 있습니다.");
+            Console.WriteLine("포맷 이름에서 다음 문자를 사용하지 마세요: " +
+                string.Join(" ", invalidChars.Select(c => $"'{c}'")));
+            Environment.Exit(1);
+        }
+
+        if (FormatList.Contains(f))
+            validFormats.Add(f);
+        else
+            unValidFormats.Add(f);
     }
 
     // 유효하지 않은 포맷이 존재
