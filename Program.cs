@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Octokit;
 using DotNetEnv;
+using RepoScore.Tests;
 
 CoconaApp.Run((
     [Argument] string[] repos,
@@ -13,9 +14,9 @@ CoconaApp.Run((
 ) =>
 {
     // 더미 데이타가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
-    var repo1Activities = DummyData.repo1Activities;
+    var repo1Activities = TestData.repo1Activities;
     Console.WriteLine("repo1Activities:" + repo1Activities.Count);
-    var repo2Activities = DummyData.repo2Activities;
+    var repo2Activities = TestData.repo2Activities;
     Console.WriteLine("repo2Activities:" + repo2Activities.Count);
 
     foreach (var repoPath in repos)
