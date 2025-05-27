@@ -18,6 +18,12 @@ CoconaApp.Run((
     var repo2Activities = DummyData.repo2Activities;
     Console.WriteLine("repo2Activities:" + repo2Activities.Count);
 
+    if (repos.Length == 1 && repos[0].Equals("test", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("✅ 테스트 모드 실행: 'test' 인자는 형식 검사를 건너뜁니다.");
+        return;
+    }
+
     foreach (var repoPath in repos)
     {
         if (!repoPath.Contains('/'))
