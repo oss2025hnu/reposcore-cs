@@ -66,6 +66,23 @@ CoconaApp.Run((
             Console.WriteLine($"[INFO] Open Issues: {repository.OpenIssuesCount}");
             Console.WriteLine($"[INFO] Language: {repository.Language}");
             Console.WriteLine($"[INFO] URL: {repository.HtmlUrl}");
+            
+            var prRequest = new PullRequestRequest
+            {
+                State = ItemStateFilter.Closed
+            };
+            var pullRequests = client.PullRequest.GetAllForRepository(owner, repo, prRequest).GetAwaiter().GetResult();
+            var mergedCount = pullRequests.Count(pr => pr.MergedAt != null);
+
+            var issueRequest = new RepositoryIssueRequest
+            {
+                State = ItemStateFilter.All
+            };
+            var issues = client.Issue.GetAllForRepository(owner, repo, issueRequest).GetAwaiter().GetResult();
+            var issueCount = issues.Count;
+
+            Console.WriteLine($"[INFO] Merged Pull Requests: {mergedCount}");
+            Console.WriteLine($"[INFO] Total Issues: {issueCount}");
         }
         catch (Exception e)
         {
