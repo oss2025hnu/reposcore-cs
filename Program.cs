@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Octokit;
 using DotNetEnv;
 
-
 CoconaApp.Run((
     [Argument(Description = "분석할 저장소. \"owner/repo\" 형식으로 공백을 구분자로 하여 여러 개 입력")] string[] repos,
     [Option('v', Description = "자세한 로그 출력을 활성화합니다.")] bool verbose,
@@ -13,7 +12,7 @@ CoconaApp.Run((
     [Option('t', Description = "GitHub 액세스 토큰 입력")] string? token
 ) =>
 {
-    // 더미 데이타가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
+    // 더미 데이터가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
     var repo1Activities = DummyData.repo1Activities;
     Console.WriteLine("repo1Activities:" + repo1Activities.Count);
     var repo2Activities = DummyData.repo2Activities;
@@ -47,42 +46,8 @@ CoconaApp.Run((
 
         try
         {
-            // collector 생성
-            var collector = new RepoDataCollector(owner, repo);
-
-            // 데이터 수집
-            var userActivities = collector.Collect();
-
-            // 테스트 출력, 라벨 카운트 기능 유지
-            Dictionary<string, int> labelCounts = new Dictionary<string, int>
-            {
-                { "bug", 0 },
-                { "documentation", 0 },
-                { "typo", 0 }
-            };
-            string filePath = $"{repo}.txt";
-            using (var writer = new StreamWriter(filePath))
-            {
-                writer.WriteLine($"=== {repo} Activities ===");
-                foreach (var kvp in userActivities)
-                {
-                    string userId = kvp.Key;
-                    UserActivity activity = kvp.Value;
-
-                    writer.WriteLine($"User ID: {userId}");
-                    writer.WriteLine($"  PR_fb: {activity.PR_fb}");
-                    writer.WriteLine($"  PR_doc: {activity.PR_doc}");
-                    writer.WriteLine($"  PR_typo: {activity.PR_typo}");
-                    writer.WriteLine($"  IS_fb: {activity.IS_fb}");
-                    writer.WriteLine($"  IS_doc: {activity.IS_doc}");
-                    writer.WriteLine(); // 빈 줄
-
-                    // 라벨 카운트
-                    labelCounts["bug"] += activity.PR_fb + activity.IS_fb;
-                    labelCounts["documentation"] += activity.PR_doc + activity.IS_doc;
-                    labelCounts["typo"] += activity.PR_typo;
-                }
-            }
+            // 리팩토링된 저장소 처리 로직
+            var labelCounts = ProcessRepository(owner, repo);
             summaries.Add(($"{owner}/{repo}", labelCounts));
         }
         catch (Exception e)
@@ -118,17 +83,70 @@ CoconaApp.Run((
     // 전체 저장소 요약 테이블 출력
     if (summaries.Count > 0)
     {
-        Console.WriteLine("\n📊 전체 저장소 요약 통계");
-        Console.WriteLine("----------------------------------------------------");
-        Console.WriteLine($"{"Repo",-30} {"B/F",5} {"Doc",5} {"typo",5}");
-        Console.WriteLine("----------------------------------------------------");
-
-        foreach (var (repoName, counts) in summaries)
-        {
-            Console.WriteLine($"{repoName,-30} {counts["bug"],5} {counts["documentation"],5} {counts["typo"],5}");
-        }
+        SummarizeLabelCounts(summaries);
     }
 });
+
+static Dictionary<string, int> ProcessRepository(string owner, string repo)
+{
+    // collector 생성
+    var collector = new RepoDataCollector(owner, repo);
+
+    // 데이터 수집
+    var userActivities = collector.Collect();
+
+    // 테스트 출력, 라벨 카운트 기능 유지
+    Dictionary<string, int> labelCounts = new Dictionary<string, int>
+    {
+        { "bug", 0 },
+        { "documentation", 0 },
+        { "typo", 0 }
+    };
+
+    string filePath = $"{repo}.txt";
+    using (var writer = new StreamWriter(filePath))
+    {
+        WriteUserActivity(writer, repo, userActivities, labelCounts);
+    }
+
+    return labelCounts;
+}
+
+static void WriteUserActivity(StreamWriter writer, string repo, Dictionary<string, UserActivity> userActivities, Dictionary<string, int> labelCounts)
+{
+    writer.WriteLine($"=== {repo} Activities ===");
+    foreach (var kvp in userActivities)
+    {
+        string userId = kvp.Key;
+        UserActivity activity = kvp.Value;
+
+        writer.WriteLine($"User ID: {userId}");
+        writer.WriteLine($"  PR_fb: {activity.PR_fb}");
+        writer.WriteLine($"  PR_doc: {activity.PR_doc}");
+        writer.WriteLine($"  PR_typo: {activity.PR_typo}");
+        writer.WriteLine($"  IS_fb: {activity.IS_fb}");
+        writer.WriteLine($"  IS_doc: {activity.IS_doc}");
+        writer.WriteLine(); // 빈 줄
+
+        // 라벨 카운트
+        labelCounts["bug"] += activity.PR_fb + activity.IS_fb;
+        labelCounts["documentation"] += activity.PR_doc + activity.IS_doc;
+        labelCounts["typo"] += activity.PR_typo;
+    }
+}
+
+static void SummarizeLabelCounts(List<(string RepoName, Dictionary<string, int> LabelCounts)> summaries)
+{
+    Console.WriteLine("\n📊 전체 저장소 요약 통계");
+    Console.WriteLine("----------------------------------------------------");
+    Console.WriteLine($"{"Repo",-30} {"B/F",5} {"Doc",5} {"typo",5}");
+    Console.WriteLine("----------------------------------------------------");
+
+    foreach (var (repoName, counts) in summaries)
+    {
+        Console.WriteLine($"{repoName,-30} {counts["bug"],5} {counts["documentation"],5} {counts["typo"],5}");
+    }
+}
 
 static List<string> checkFormat(string[] format)
 {
