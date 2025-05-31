@@ -1,13 +1,25 @@
 using System.Collections.Generic;
 
-// 깃헙에서 우리가 필요한 정보를 가져와서 담아놓는 레코드 (각 내역별 활동 횟수)
-public record UserActivity(
-    int PR_fb,
-    int PR_doc,
-    int PR_typo,
-    int IS_fb,
-    int IS_doc
-);
+// 가변 속성으로 바꾼 UserActivity 레코드
+public record UserActivity
+{
+    public int PR_fb { get; set; }
+    public int PR_doc { get; set; }
+    public int PR_typo { get; set; }
+    public int IS_fb { get; set; }
+    public int IS_doc { get; set; }
+
+    public UserActivity() {}
+
+    public UserActivity(int prFb, int prDoc, int prTypo, int isFb, int isDoc)
+    {
+        PR_fb = prFb;
+        PR_doc = prDoc;
+        PR_typo = prTypo;
+        IS_fb = isFb;
+        IS_doc = isDoc;
+    }
+}
 
 // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
 public record UserScore(
@@ -35,6 +47,7 @@ public static class DummyData
         { "user08", new UserActivity(0, 0, 0, 10, 0) },
         { "user09", new UserActivity(0, 0, 0, 0, 10) },
     };
+
     public static Dictionary<string, UserActivity> repo2Activities = new() {
         { "user03", new UserActivity(26, 27, 28, 29, 30) },
         { "user04", new UserActivity(31, 32, 33, 34, 35) },
@@ -62,6 +75,7 @@ public static class DummyData
         {"user11", new UserScore(33, 20, 4, 16, 5, 78)}
     };
 }
+
 
 /*
 1단계 RepoDataCollector
