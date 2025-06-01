@@ -10,9 +10,17 @@ CoconaApp.Run((
     [Option('v', Description = "자세한 로그 출력을 활성화합니다.")] bool verbose,
     [Option('o', Description = "출력 디렉토리 경로를 지정합니다. (default : \"result\")")] string? output,
     [Option('f', Description = "출력 형식 지정 (\"text\", \"csv\", \"chart\", \"html\", \"all\", default : \"all\")")] string[]? format,
-    [Option('t', Description = "GitHub 액세스 토큰 입력")] string? token
+    [Option('t', Description = "GitHub 액세스 토큰 입력")] string? token,
+    [Option("only-pr", Description = "PR 활동만 분석합니다.")] bool onlyPR,
+    [Option("only-issue", Description = "이슈 활동만 분석합니다.")] bool onlyIssue
 ) =>
 {
+    //  옵션 충돌 방지: --only-pr 와 --only-issue는 동시에 사용 불가 
+    if (onlyPR && onlyIssue)
+    {
+        Console.WriteLine("❌ --only-pr 와 --only-issue 옵션은 동시에 사용할 수 없습니다.");
+        Environment.Exit(1);
+    }
     // 더미 데이타가 실제로 불러와 지는지 기본적으로 확인하기 위한 코드
     var repo1Activities = DummyData.repo1Activities;
     Console.WriteLine("repo1Activities:" + repo1Activities.Count);
@@ -38,6 +46,26 @@ CoconaApp.Run((
 
             // 데이터 수집
             var userActivities = collector.Collect();
+
+            if (onlyPR)
+            {
+                // 이슈 활동 제거
+                foreach (var activity in userActivities.Values)
+                {
+                    activity.IS_fb = 0;
+                    activity.IS_doc = 0;
+                }
+            }
+            else if (onlyIssue)
+            {
+                // PR 활동 제거
+                foreach (var activity in userActivities.Values)
+                {
+                    activity.PR_fb = 0;
+                    activity.PR_doc = 0;
+                    activity.PR_typo = 0;
+                }
+            }
 
             // 테스트 출력, 라벨 카운트 기능 유지
             Dictionary<string, int> labelCounts = new Dictionary<string, int>

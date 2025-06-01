@@ -1,13 +1,23 @@
 using System.Collections.Generic;
 
 // 깃헙에서 우리가 필요한 정보를 가져와서 담아놓는 레코드 (각 내역별 활동 횟수)
-public record UserActivity(
-    int PR_fb,
-    int PR_doc,
-    int PR_typo,
-    int IS_fb,
-    int IS_doc
-);
+public class UserActivity
+{
+    public int PR_fb { get; set; }
+    public int PR_doc { get; set; }
+    public int PR_typo { get; set; }
+    public int IS_fb { get; set; }
+    public int IS_doc { get; set; }
+
+    public UserActivity(int pr_fb, int pr_doc, int pr_typo, int is_fb, int is_doc)
+    {
+        PR_fb = pr_fb;
+        PR_doc = pr_doc;
+        PR_typo = pr_typo;
+        IS_fb = is_fb;
+        IS_doc = is_doc;
+    }
+}
 
 // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
 public record UserScore(

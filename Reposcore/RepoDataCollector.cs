@@ -135,14 +135,15 @@ public class RepoDataCollector
 
             // 레코드로 변환
             var userActivities = new Dictionary<string, UserActivity>();
-            foreach (var (key, value) in mutableActivities)
+            foreach (var (key, activity) in mutableActivities)
             {
+                // PR_fb, PR_doc, PR_typo, IS_fb, IS_doc 순서
                 userActivities[key] = new UserActivity(
-                    PR_fb: value.PR_fb,
-                    PR_doc: value.PR_doc,
-                    PR_typo: value.PR_typo,
-                    IS_fb: value.IS_fb,
-                    IS_doc: value.IS_doc
+                    activity.PR_fb,
+                    activity.PR_doc,
+                    activity.PR_typo,
+                    activity.IS_fb,
+                    activity.IS_doc
                 );
             }
 
