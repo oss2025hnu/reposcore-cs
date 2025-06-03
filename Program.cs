@@ -1,5 +1,12 @@
 ﻿using Cocona;
 
+// 분석 명령만 유지하되, clean 명령을 함께 인식하게끔 분기 처리
+if (args.Length > 0 && args[0] == "clean")
+{
+    CleanOutputDirectory();
+    return;
+}
+
 CoconaApp.Run((
     [Argument(Description = "분석할 저장소. \"owner/repo\" 형식으로 공백을 구분자로 하여 여러 개 입력")] string[] repos,
     [Option('v', Description = "자세한 로그 출력을 활성화합니다.")] bool verbose,
@@ -26,6 +33,8 @@ CoconaApp.Run((
         // 여기서 기본값 배열은 {"text", "csv", "chart", "html"}으로 설정됨
         Console.WriteLine("출력 형식이 지정되지 않아 기본값 'all'이 사용됩니다.");
     }
+
+    Console.WriteLine("분석 실행 시작");
 
     // 저장소별 라벨 통계 요약 정보를 저장할 리스트
     var summaries = new List<(string RepoName, Dictionary<string, int> LabelCounts)>();
@@ -173,6 +182,21 @@ CoconaApp.Run((
         }
     }
 });
+
+static void CleanOutputDirectory()
+{
+    var outputDir = "output";
+    if (!Directory.Exists(outputDir))
+    {
+        Console.WriteLine("output/ 폴더가 존재하지 않습니다.");
+        return;
+    }
+    var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories);
+    var dirs = Directory.GetDirectories(outputDir, "*", SearchOption.AllDirectories);
+    foreach (var file in files) File.Delete(file);
+    foreach (var dir in dirs.Reverse()) Directory.Delete(dir);
+    Console.WriteLine("output/ 내부 파일이 모두 삭제되었습니다.");
+}
 
 static List<string> checkFormat(string[] format)
 {
