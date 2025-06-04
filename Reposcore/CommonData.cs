@@ -36,32 +36,6 @@ public record UserActivity
 // 모아오는 데이타가 바로 repo1Activities 같은 것이다.
 public static class DummyData
 {
-    public static Dictionary<string, UserActivity> repo1Activities = new() {
-    { "user00", new UserActivity { PR_fb = 1, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
-    { "user01", new UserActivity { PR_fb = 0, PR_doc = 1, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
-    { "user02", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 1, IS_fb = 0, IS_doc = 0 } },
-    { "user03", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 1, IS_doc = 0 } },
-    { "user04", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 1 } },
-    { "user05", new UserActivity { PR_fb = 10, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
-    { "user06", new UserActivity { PR_fb = 0, PR_doc = 10, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
-    { "user07", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 10, IS_fb = 0, IS_doc = 0 } },
-    { "user08", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 10, IS_doc = 0 } },
-    { "user09", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 10 } },
-};
-
-    public static Dictionary<string, UserActivity> repo2Activities = new() {
-    { "user03", new UserActivity { PR_fb = 26, PR_doc = 27, PR_typo = 28, IS_fb = 29, IS_doc = 30 } },
-    { "user04", new UserActivity { PR_fb = 31, PR_doc = 32, PR_typo = 33, IS_fb = 34, IS_doc = 35 } },
-    { "user05", new UserActivity { PR_fb = 36, PR_doc = 37, PR_typo = 38, IS_fb = 39, IS_doc = 40 } },
-    { "user06", new UserActivity { PR_fb = 41, PR_doc = 42, PR_typo = 43, IS_fb = 44, IS_doc = 45 } },
-    { "user08", new UserActivity { PR_fb = 12, PR_doc = 5, PR_typo = 8, IS_fb = 3, IS_doc = 17 } },
-    { "user09", new UserActivity { PR_fb = 7, PR_doc = 14, PR_typo = 2, IS_fb = 19, IS_doc = 6 } },
-    { "user10", new UserActivity { PR_fb = 21, PR_doc = 9, PR_typo = 13, IS_fb = 4, IS_doc = 11 } },
-    { "user11", new UserActivity { PR_fb = 2, PR_doc = 18, PR_typo = 7, IS_fb = 15, IS_doc = 10 } },
-    { "user12", new UserActivity { PR_fb = 16, PR_doc = 3, PR_typo = 12, IS_fb = 8, IS_doc = 14 } },
-};
-
-
     public static Dictionary<string, UserActivity> repo1Activities = new()
     {
         { "user00", new UserActivity { PR_fb = 1, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
@@ -74,9 +48,22 @@ public static class DummyData
         { "user07", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 10, IS_fb = 0, IS_doc = 0 } },
         { "user08", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 10, IS_doc = 0 } },
         { "user09", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 10 } },
+    };
 
+    public static Dictionary<string, UserActivity> repo2Activities = new()
+    {
+        { "user03", new UserActivity { PR_fb = 26, PR_doc = 27, PR_typo = 28, IS_fb = 29, IS_doc = 30 } },
+        { "user04", new UserActivity { PR_fb = 31, PR_doc = 32, PR_typo = 33, IS_fb = 34, IS_doc = 35 } },
+        { "user05", new UserActivity { PR_fb = 36, PR_doc = 37, PR_typo = 38, IS_fb = 39, IS_doc = 40 } },
+        { "user06", new UserActivity { PR_fb = 41, PR_doc = 42, PR_typo = 43, IS_fb = 44, IS_doc = 45 } },
+        { "user08", new UserActivity { PR_fb = 12, PR_doc = 5, PR_typo = 8, IS_fb = 3, IS_doc = 17 } },
+        { "user09", new UserActivity { PR_fb = 7, PR_doc = 14, PR_typo = 2, IS_fb = 19, IS_doc = 6 } },
+        { "user10", new UserActivity { PR_fb = 21, PR_doc = 9, PR_typo = 13, IS_fb = 4, IS_doc = 11 } },
+        { "user11", new UserActivity { PR_fb = 2, PR_doc = 18, PR_typo = 7, IS_fb = 15, IS_doc = 10 } },
+        { "user12", new UserActivity { PR_fb = 16, PR_doc = 3, PR_typo = 12, IS_fb = 8, IS_doc = 14 } },
     };
 }
+
 
 
 /*
