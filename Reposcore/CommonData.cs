@@ -1,23 +1,24 @@
 using System.Collections.Generic;
 
-// 깃헙에서 우리가 필요한 정보를 가져와서 담아놓는 레코드 (각 내역별 활동 횟수)
-public record UserActivity(
-    int PR_fb,
-    int PR_doc,
-    int PR_typo,
-    int IS_fb,
-    int IS_doc
-);
+// 가변 속성으로 바꾼 UserActivity 레코드
+public record UserActivity
+{
+    public int PR_fb { get; set; }
+    public int PR_doc { get; set; }
+    public int PR_typo { get; set; }
+    public int IS_fb { get; set; }
+    public int IS_doc { get; set; }
+}
 
-// UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
-public record UserScore(
-    int PR_fb,
-    int PR_doc,
-    int PR_typo,
-    int IS_fb,
-    int IS_doc,
-    int total
-);
+    // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
+    public record UserScore(
+        int PR_fb,
+        int PR_doc,
+        int PR_typo,
+        int IS_fb,
+        int IS_doc,
+        int total
+    );
 
 // 1번 단계를 책임지는 Repscore/RepoDataCollector.cs의 클래스의 객체 하나가
 // 모아오는 데이타가 바로 repo1Activities 같은 것이다.
@@ -35,6 +36,7 @@ public static class DummyData
         { "user08", new UserActivity(0, 0, 0, 10, 0) },
         { "user09", new UserActivity(0, 0, 0, 0, 10) },
     };
+
     public static Dictionary<string, UserActivity> repo2Activities = new() {
         { "user03", new UserActivity(26, 27, 28, 29, 30) },
         { "user04", new UserActivity(31, 32, 33, 34, 35) },
@@ -62,6 +64,7 @@ public static class DummyData
         {"user11", new UserScore(33, 20, 4, 16, 5, 78)}
     };
 }
+
 
 /*
 1단계 RepoDataCollector
