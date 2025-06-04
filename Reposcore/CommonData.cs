@@ -51,21 +51,20 @@ public static Dictionary<string, UserActivity> repo2Activities = new() {
 };
 
 
-    public static Dictionary<string, UserScore> repo1Scores = new()
+    public static Dictionary<string, UserActivity> repo1Activities = new()
     {
-        {"user01", new UserScore(21, 8, 0, 4, 3, 36)},
-        {"user02", new UserScore(12, 6, 5, 2, 1, 26)},
-        {"user03", new UserScore(3, 2, 3, 6, 2, 16)},
-        {"user04", new UserScore(18, 10, 4, 8, 1, 41)},
-        {"user05", new UserScore(9, 4, 2, 2, 5, 22)},
-        {"user06", new UserScore(6, 12, 1, 6, 3, 28)},
-        {"user07", new UserScore(15, 14, 5, 4, 2, 40)},
-        {"user08", new UserScore(27, 16, 3, 10, 4, 60)},
-        {"user09", new UserScore(30, 6, 0, 12, 1, 49)},
-        {"user10", new UserScore(24, 18, 2, 14, 2, 60)},
-        {"user11", new UserScore(33, 20, 4, 16, 5, 78)}
+        { "user00", new UserActivity { PR_fb = 1, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
+        { "user01", new UserActivity { PR_fb = 0, PR_doc = 1, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
+        { "user02", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 1, IS_fb = 0, IS_doc = 0 } },
+        { "user03", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 1, IS_doc = 0 } },
+        { "user04", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 1 } },
+        { "user05", new UserActivity { PR_fb = 10, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
+        { "user06", new UserActivity { PR_fb = 0, PR_doc = 10, PR_typo = 0, IS_fb = 0, IS_doc = 0 } },
+        { "user07", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 10, IS_fb = 0, IS_doc = 0 } },
+        { "user08", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 10, IS_doc = 0 } },
+        { "user09", new UserActivity { PR_fb = 0, PR_doc = 0, PR_typo = 0, IS_fb = 0, IS_doc = 10 } },
+
     };
-}
 
 
 /*
