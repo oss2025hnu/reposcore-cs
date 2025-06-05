@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-// 가변 속성으로 바꾼 UserActivity 레코드
+// 사용자 활동을 표현하는 레코드
 public record UserActivity
 {
     public int PR_fb { get; set; }
@@ -8,26 +8,17 @@ public record UserActivity
     public int PR_typo { get; set; }
     public int IS_fb { get; set; }
     public int IS_doc { get; set; }
-
-    public void Deconstruct(out int prFb, out int prDoc, out int prTypo, out int isFb, out int isDoc)
-    {
-        prFb = PR_fb;
-        prDoc = PR_doc;
-        prTypo = PR_typo;
-        isFb = IS_fb;
-        isDoc = IS_doc;
-    }
 }
 
-    // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
-    public record UserScore(
-        int PR_fb,
-        int PR_doc,
-        int PR_typo,
-        int IS_fb,
-        int IS_doc,
-        int total
-    );
+// 사용자 점수를 표현하는 레코드
+public record UserScore(
+    int PR_fb,
+    int PR_doc,
+    int PR_typo,
+    int IS_fb,
+    int IS_doc,
+    int total
+);
 
 public static class CommonData
 {
@@ -73,6 +64,7 @@ public static class CommonData
         { "user11", new UserScore(33, 20, 4, 16, 5, 78) }
     };
 }
+
 
 
 /*
