@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-// 사용자 활동을 표현하는 레코드
+// 가변 속성으로 바꾼 UserActivity 레코드
 public record UserActivity
 {
     public int PR_fb { get; set; }
@@ -10,7 +10,7 @@ public record UserActivity
     public int IS_doc { get; set; }
 }
 
-// 사용자 점수를 표현하는 레코드
+    // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
 public record UserScore(
     int PR_fb,
     int PR_doc,
