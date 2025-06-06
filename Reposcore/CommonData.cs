@@ -8,6 +8,15 @@ public record UserActivity
     public int PR_typo { get; set; }
     public int IS_fb { get; set; }
     public int IS_doc { get; set; }
+
+    public void Deconstruct(out int prFb, out int prDoc, out int prTypo, out int isFb, out int isDoc)
+    {
+        prFb = PR_fb;
+        prDoc = PR_doc;
+        prTypo = PR_typo;
+        isFb = IS_fb;
+        isDoc = IS_doc;
+    }
 }
 
     // UserActivity를 분석해서 사용자별 점수를 계산하는 레코드
