@@ -12,7 +12,8 @@ CoconaApp.Run((
     [Option('f', Description = "출력 형식 지정 (\"text\", \"csv\", \"chart\", \"html\", \"all\", default : \"all\")", ValueName = "Output format")] string[]? format,
     [Option('t', Description = "GitHub 액세스 토큰 입력", ValueName = "Github token")] string? token,
     [Option("include-user", Description = "결과에 포함할 사용자 ID 목록", ValueName = "Include user's id")] string[]? includeUsers,
-    [Option("dry-run", Description = "실제 작업 없이 시뮬레이션 로그만 출력")] bool dryRun
+    [Option("dry-run", Description = "실제 작업 없이 시뮬레이션 로그만 출력")] bool dryRun,
+    [Option("top", Description = "UserScore.total 기준 상위 N명의 결과만 출력", ValueName = "Top N")] int? top
 ) =>
 {
     // ─────────────────────────────────────────────────────────────
@@ -177,6 +178,13 @@ CoconaApp.Run((
 
             var userScores = userActivities.ToDictionary(pair => pair.Key, pair => ScoreAnalyzer.FromActivity(pair.Value));
 
+            if (top.HasValue && top.Value > 0)
+            {
+                userScores = userScores
+                    .OrderByDescending(pair => pair.Value.total)
+                    .Take(top.Value)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+            }
             // 점수 계산 기능이 구현되지 않았으므로 현재 생성되는 파일은 모두 DummyData의 repo1Scores으로 만들어짐
             // 추후 계산 기능이 구현 후 반환되는 값을 DummyData.repo1Scores대신 전달해야합니다
             var generator = new FileGenerator(userScores, repo, outputDir);
