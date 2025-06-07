@@ -76,7 +76,7 @@ public class RepoDataCollector
     {
         if (returnDummyData)
         {
-            return DummyData.repo1Activities;
+            return CommonData.repo1Activities;
         }
 
         try
@@ -137,13 +137,14 @@ public class RepoDataCollector
             var userActivities = new Dictionary<string, UserActivity>();
             foreach (var (key, value) in mutableActivities)
             {
-                userActivities[key] = new UserActivity(
-                    PR_fb: value.PR_fb,
-                    PR_doc: value.PR_doc,
-                    PR_typo: value.PR_typo,
-                    IS_fb: value.IS_fb,
-                    IS_doc: value.IS_doc
-                );
+                userActivities[key] = new UserActivity
+                {
+                    PR_fb = value.PR_fb,
+                    PR_doc = value.PR_doc,
+                    PR_typo = value.PR_typo,
+                    IS_fb = value.IS_fb,
+                    IS_doc = value.IS_doc
+                };
             }
 
             return userActivities;
