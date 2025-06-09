@@ -297,6 +297,7 @@ static List<string> checkFormat(string[] format)
             Console.WriteLine($"포맷 '{f}'에는 파일명으로 사용할 수 없는 문자가 포함되어 있습니다.");
             Console.WriteLine("포맷 이름에서 다음 문자를 사용하지 마세요: " +
                 string.Join(" ", invalidChars.Select(c => $"'{c}'")));
+            Console.WriteLine("\n⛔ 잘못된 옵션으로 인해 프로그램을 종료합니다. '--help' 옵션으로 사용법을 확인하세요.");
             Environment.Exit(1);
         }
 
@@ -309,13 +310,15 @@ static List<string> checkFormat(string[] format)
     // 유효하지 않은 포맷이 존재
     if (unValidFormats.Count != 0)
     {
-        Console.WriteLine("유효하지 않은 포맷이 존재합니다.");
-        Console.Write("유효하지 않은 포맷: ");
+        Console.WriteLine("❌ 오류: 유효하지 않은 출력 형식이 포함되어 있습니다.");
+        Console.WriteLine("입력한 형식 중 아래 항목은 지원되지 않습니다:");
         foreach (var unValidFormat in unValidFormats)
         {
             Console.Write($"{unValidFormat} ");
         }
-        Console.Write("\n");
+        Console.WriteLine("\n✅ 사용 가능한 출력 형식은 다음과 같습니다:");
+        Console.WriteLine("  text, csv, chart, html, all");
+        Console.Write("\n 잘못된 옵션으로 인해 종료합니다. '--help' 옵션으로 사용법을 확인하세요.");
         Environment.Exit(1);
     }
 
