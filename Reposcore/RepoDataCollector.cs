@@ -168,12 +168,16 @@ public class RepoDataCollector
         }
         catch (AuthorizationException)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("❗ 인증 실패: 올바른 토큰을 사용했는지 확인하세요.");
+            Console.ResetColor();
             Environment.Exit(1);
         }
         catch (NotFoundException)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("❗ 저장소를 찾을 수 없습니다. owner/repo 이름을 확인하세요.");
+            Console.ResetColor();
             Environment.Exit(1);
         }
         catch (Exception ex)

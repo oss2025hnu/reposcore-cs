@@ -46,13 +46,15 @@ public class FileGenerator
         foreach (var (id, scores) in _scores.OrderByDescending(x => x.Value.total))
         {
             double prRate = (sumOfPR > 0) ? (scores.PR_doc + scores.PR_fb + scores.PR_typo) / sumOfPR * 100 : 0.0;
-    double isRate = (sumOfIs > 0) ? (scores.IS_doc + scores.IS_fb) / sumOfIs * 100 : 0.0;
+            double isRate = (sumOfIs > 0) ? (scores.IS_doc + scores.IS_fb) / sumOfIs * 100 : 0.0;
             string line =
                 $"{id},{scores.PR_fb},{scores.PR_doc},{scores.PR_typo},{scores.IS_fb},{scores.IS_doc},{prRate:F1},{isRate:F1},{scores.total}";
             writer.WriteLine(line);
         }
 
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"{filePath} 생성됨");
+        Console.ResetColor();
     }
     public void GenerateTable()
     {
@@ -87,7 +89,9 @@ public class FileGenerator
 
         // 파일 출력
         File.WriteAllText(filePath, table.ToMinimalString());
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"{filePath} 생성됨");
+        Console.ResetColor();
     }
 
     public void GenerateChart()
@@ -103,7 +107,7 @@ public class FileGenerator
 
         string[] names = labels.ToArray();
         double[] scores = values.ToArray();
-        
+
         // ✅ 간격 조절된 Position
         double spacing = 10; // 막대 간격
         double[] positions = Enumerable.Range(0, names.Length)
@@ -134,7 +138,9 @@ public class FileGenerator
 
         string outputPath = Path.Combine(_folderPath, $"{_repoName}_chart.png");
         plt.SavePng(outputPath, 1920, 1080);
+        Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"✅ 차트 생성 완료: {outputPath}");
+        Console.ResetColor();
     }
 
 

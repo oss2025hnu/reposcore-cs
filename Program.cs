@@ -20,7 +20,9 @@ CoconaApp.Run((
     // ─────────────────────────────────────────────────────────────
     if (dryRun)
     {
+        Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine("===== Dry-Run 시뮬레이션 =====");
+        Console.ResetColor();
         Console.WriteLine("분석 대상 저장소 목록:");
         foreach (var repoPath in repos)
         {
@@ -212,7 +214,9 @@ CoconaApp.Run((
     // 전체 저장소 요약 테이블 출력
     if (summaries.Count > 0)
     {
+        Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("\n📊 전체 저장소 요약 통계");
+        Console.ResetColor();
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine($"{"Repo",-30} {"B/F",5} {"Doc",5} {"typo",5}");
         Console.WriteLine("----------------------------------------------------");
@@ -226,7 +230,9 @@ CoconaApp.Run((
     // ❗ 실패 저장소 요약 출력
     if (failedRepos.Count > 0)
     {
+        Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine("\n❌ 처리되지 않은 저장소 목록:");
+        Console.ResetColor();
         foreach (var r in failedRepos)
         {
             Console.WriteLine($"- {r} (올바른 형식: owner/repo)");
@@ -286,7 +292,9 @@ static (string, string)? TryParseRepoPath(string repoPath)
     var parts = repoPath.Split('/');
     if (parts.Length != 2)
     {
+        Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"⚠️ 저장소 인자 '{repoPath}'는 'owner/repo' 형식이어야 합니다. (예: oss2025hnu/reposcore-cs");
+        Console.ResetColor();
         return null;
     }
 
