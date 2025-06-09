@@ -63,7 +63,12 @@ CoconaApp.Run((
                 { "documentation", 0 },
                 { "typo", 0 }
             };
-            string filePath = $"{repo}.txt";
+            string filePath = Path.Combine("output", repo, $"{repo}2.txt");
+            string directoryPath = Path.GetDirectoryName(filePath) ?? throw new InvalidOperationException($"Invalid file path: {filePath}");
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
             using (var writer = new StreamWriter(filePath))
             {
                 writer.WriteLine($"=== {repo} Activities ===");
@@ -136,7 +141,7 @@ CoconaApp.Run((
             }
             if (formats.Contains("chart"))
             {
-                Console.WriteLine("차트 생성이 아직 구현되지 않았습니다.");
+                generator.GenerateChart();
             }
             if (formats.Contains("html"))
             {
