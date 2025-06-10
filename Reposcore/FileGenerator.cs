@@ -44,15 +44,18 @@ public class FileGenerator
         // 파일에 "# 점수 계산 기준…" 을 쓰면, 이 줄이 CSV 첫 줄로 나옵니다.
         writer.WriteLine("# 점수 계산 기준: PR_fb*3, PR_doc*2, PR_typo*1, IS_fb*2, IS_doc*1");
         // CSV 헤더
-        writer.WriteLine("User,f/b_PR,doc_PR,typo,f/b_issue,doc_issue,total");
+        writer.WriteLine("User,f/b_PR,doc_PR,typo,f/b_issue,doc_issue,PR_rate,IS_rate,total");
 
         // 내용 작성
         foreach (var (id, scores) in _scores.OrderByDescending(x => x.Value.total))
         {
-            double prRate = (sumOfPR > 0) ? (scores.PR_doc + scores.PR_fb + scores.PR_typo) / sumOfPR * 100 : 0.0;
-    double isRate = (sumOfIs > 0) ? (scores.IS_doc + scores.IS_fb) / sumOfIs * 100 : 0.0;
+            double prScore = scores.PR_fb * 3 + scores.PR_doc * 2 + scores.PR_typo * 1;
+            double isScore = scores.IS_fb * 2 + scores.IS_doc * 1;
+            double total = prScore + isScore;
+            double prRate = (total > 0) ? prScore / total * 100 : 0.0;
+            double isRate = (total > 0) ? isScore / total * 100 : 0.0;
             string line =
-                $"{id},{scores.PR_fb},{scores.PR_doc},{scores.PR_typo},{scores.IS_fb},{scores.IS_doc},{prRate:F1},{isRate:F1},{scores.total}";
+                $"{id},{scores.PR_fb},{scores.PR_doc},{scores.PR_typo},{scores.IS_fb},{scores.IS_doc},{prRate:F1}%,{isRate:F1}%,{scores.total}";
             writer.WriteLine(line);
         }
 
@@ -74,8 +77,12 @@ public class FileGenerator
         // 내용 작성
         foreach (var (id, scores) in _scores.OrderByDescending(x => x.Value.total))
         {
-            double prRate = (sumOfPR > 0) ? (scores.PR_doc + scores.PR_fb + scores.PR_typo) / sumOfPR * 100 : 0.0;
-            double isRate = (sumOfIs > 0) ? (scores.IS_doc + scores.IS_fb) / sumOfIs * 100 : 0.0;
+            double prScore = scores.PR_fb * 3 + scores.PR_doc * 2 + scores.PR_typo * 1;
+            double isScore = scores.IS_fb * 2 + scores.IS_doc * 1;
+            double total = prScore + isScore;
+            double prRate = (total > 0) ? prScore / total * 100 : 0.0;
+            double isRate = (total > 0) ? isScore / total * 100 : 0.0;
+            string totalWithRate = $"{scores.total} [PR:{prRate:F1}%, Issue:{isRate:F1}%]";
             table.AddRow(
                 id.PadRight(colWidths[0]), // 글자는 왼쪽 정렬                   
                 scores.PR_fb.ToString().PadLeft(colWidths[1]), // 숫자는 오른쪽 정렬
@@ -83,8 +90,8 @@ public class FileGenerator
                 scores.PR_typo.ToString().PadLeft(colWidths[3]),
                 scores.IS_fb.ToString().PadLeft(colWidths[4]),
                 scores.IS_doc.ToString().PadLeft(colWidths[5]),
-                $"{prRate:F1}".PadLeft(colWidths[6]),
-                $"{isRate:F1}".PadLeft(colWidths[7]),
+                $"{prRate:F1}%".PadLeft(colWidths[6]),
+                $"{isRate:F1}%".PadLeft(colWidths[7]),
                 scores.total.ToString().PadLeft(colWidths[8])
             );
         }
