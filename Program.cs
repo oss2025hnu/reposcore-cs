@@ -2,11 +2,7 @@
 using System.Text.Json;          // JSON 파싱
 using System.IO;                 // File, Path
 using System.Linq;
-
-// ───────────────────────────────────────────────────────
-// ① 캐시 시뮬레이션 상수 (현재는 항상 Disabled)
-// ───────────────────────────────────────────────────────
-const bool CACHE_ENABLED = false;
+using System.Collections.Generic;
 
 CoconaApp.Run((
     [Argument(Description = "분석할 저장소. \"owner/repo\" 형식으로 공백을 구분자로 하여 여러 개 입력")] string[] repos,
@@ -15,10 +11,21 @@ CoconaApp.Run((
     [Option('f', Description = "출력 형식 지정 (\"text\", \"csv\", \"chart\", \"html\", \"all\", default : \"all\")", ValueName = "Output format")] string[]? format,
     [Option('t', Description = "GitHub 액세스 토큰 입력", ValueName = "Github token")] string? token,
     [Option("include-user", Description = "결과에 포함할 사용자 ID 목록", ValueName = "Include user's id")] string[]? includeUsers,
-    [Option("dry-run", Description = "실제 작업 없이 시뮬레이션 로그만 출력")] bool dryRun,
-    [Option("user-info", Description = "ID→이름 매핑 JSON/CSV 파일 경로")] string? userInfoPath
+    [Option("since", Description = "이 날짜 이후의 PR 및 이슈만 분석 (YYYY-MM-DD)", ValueName = "Start date")] string? since,
+    [Option("until", Description = "이 날짜까지의 PR 및 이슈만 분석 (YYYY-MM-DD)", ValueName = "End date")] string? until,
+    [Option("user-info", Description = "ID→이름 매핑 JSON/CSV 파일 경로")] string? userInfoPath,
+    [Option("progress", Description = "API 호출 진행률을 표시합니다.")] bool progress,
+    [Option("use-cache", Description = "캐시된 데이터를 사용합니다.")] bool useCache = false,
+    [Option("show-state-summary", Description = "PR/Issue 상태 요약을 표시합니다.")] bool showStateSummary = false
 ) =>
 {
+    // 캐시 디렉토리 생성
+    const string CACHE_DIR = "cache";
+    if (!Directory.Exists(CACHE_DIR))
+    {
+        Directory.CreateDirectory(CACHE_DIR);
+    }
+
     // ───────────────────────────────────────────────────────
     // A) user-info 옵션으로 전달된 JSON/CSV 파일을 파싱해서 idToNameMap에 저장
     // ───────────────────────────────────────────────────────
@@ -55,100 +62,6 @@ CoconaApp.Run((
             return;
         }
     }
-    // ─────────────────────────────────────────────────────────────
-    // ①-0) dry-run일 경우: 실제 로직 실행 전 "시뮬레이션 로그" 출력 후 종료
-    // ─────────────────────────────────────────────────────────────
-    if (dryRun)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            Console.WriteLine("[Dry-run] GitHub API를 호출하려면 --token 옵션이 필요합니다.");
-            return;
-        }
-        RepoDataCollector.CreateClient(token);
-        Console.WriteLine("===== Dry-Run 시뮬레이션 =====");
-        Console.WriteLine("분석 대상 저장소 목록:");
-        foreach (var repoPath in repos)
-        {
-            Console.WriteLine($"  - {repoPath}");
-        }
-        Console.WriteLine();
-
-        Console.WriteLine($"캐시 사용 여부: {(CACHE_ENABLED ? "Enabled" : "Disabled")}");
-        Console.WriteLine();
-
-        Console.WriteLine("API 호출 예정 여부: Yes (GitHub API를 사용하여 데이터를 가져올 예정)");
-        Console.WriteLine();
-
-        // format과 outputDir을 시뮬레이션용으로 계산
-        List<string> _simFormats;
-        if (format == null || format.Length == 0)
-        {
-            _simFormats = new List<string> { "text", "csv", "chart", "html" };
-        }
-        else
-        {
-            _simFormats = checkFormat(format);
-        }
-        string _simOutputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
-
-        Console.WriteLine($"출력 디렉토리 예상 위치: {_simOutputDir}/<repoName>.[csv|txt]");
-        Console.WriteLine("생성될 파일 형식:");
-        foreach (var fmt in _simFormats)
-        {
-            if (fmt == "csv")
-                Console.WriteLine($"  · {_simOutputDir}/<repoName>.csv");
-            if (fmt == "text")
-                Console.WriteLine($"  · {_simOutputDir}/<repoName>.txt");
-            if (fmt == "chart")
-                Console.WriteLine($"  · [차트 기능 미구현으로 표시]");
-            if (fmt == "html")
-                Console.WriteLine($"  · [HTML 기능 미구현으로 표시]");
-        }
-
-        foreach (var repoPath in repos)
-        {
-            var parsed = TryParseRepoPath(repoPath);
-            if (parsed == null)
-            {
-                Console.WriteLine($"⚠️ 저장소 경로 무시됨 (형식 오류): {repoPath}");
-                continue;
-            }
-
-            var (owner, repo) = parsed.Value;
-            var collector = new RepoDataCollector(owner, repo);
-
-            Console.WriteLine($"\n[Dry-run] {owner}/{repo} 저장소 참여자 목록 조회 중...");
-
-            Dictionary<string, UserActivity> userActivities;
-            try
-            {
-                userActivities = collector.Collect(); // ✅ 실제 참여자 목록 가져오기
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Dry-run] 참여자 정보를 가져오는 데 실패했습니다: {ex.Message}");
-                continue;
-            }
-
-            var participantIds = userActivities.Keys.ToList();
-            Console.WriteLine($"[Dry-run] 총 참여자 {participantIds.Count}명: {string.Join(", ", participantIds)}");
-
-            if (includeUsers != null && includeUsers.Length > 0)
-            {
-                Console.WriteLine($"[Dry-run] --include-user 필터 적용됨: {string.Join(", ", includeUsers)}");
-
-                var included = participantIds.Where(u => includeUsers.Contains(u)).ToList();
-                var excluded = participantIds.Except(included).ToList();
-
-                Console.WriteLine($"[Dry-run] 분석에 포함될 사용자: {string.Join(", ", included)}");
-                Console.WriteLine($"[Dry-run] 분석에서 제외될 사용자: {string.Join(", ", excluded)}");
-            }
-        }
-
-        Console.WriteLine("\n===== 시뮬레이션 종료 =====");
-        return;
-    }
 
     // ───────────────────────────────────────────────────────
     // 1) output 옵션 누락 시 기본값 안내
@@ -168,150 +81,119 @@ CoconaApp.Run((
         Console.WriteLine("출력 형식이 지정되지 않아 기본값 'all'이 사용됩니다.");
     }
 
-    // 저장소별 라벨 통계 요약 정보를 저장할 리스트
     var summaries = new List<(string RepoName, Dictionary<string, int> LabelCounts)>();
-    var failedRepos = new List<string>(); // ❗ 실패한 저장소 목록 수집용
+    var failedRepos = new List<string>();
 
-    // _client 초기화 
     RepoDataCollector.CreateClient(token);
+
+    var totalScores = new Dictionary<string, UserScore>(); // 🆕 total score 집계용
+    int totalRepos = repos.Length;
+    int repoIndex = 0;
 
     foreach (var repoPath in repos)
     {
-        // repoPath 파싱 및 형식 검사  
+        repoIndex++;
         var parsed = TryParseRepoPath(repoPath);
-        if (parsed == null)
-        {
-            failedRepos.Add(repoPath);
-            continue; // 형식 오류는 건너뜀
-        }
-
+        if (parsed == null) { failedRepos.Add(repoPath); continue; }
         var (owner, repo) = parsed.Value;
-
-        // collector 생성
         var collector = new RepoDataCollector(owner, repo);
 
-        // 데이터 수집
-        var userActivities = collector.Collect();
+        if (progress)
+        {
+            Console.Write($"\r▶ 처리 중 ({repoIndex}/{totalRepos}): {owner}/{repo}...\n");
+            Console.Out.Flush();
+        }
 
-        Console.WriteLine($"\n🔍 처리 중: {owner}/{repo}");
-
+        Dictionary<string, UserActivity> userActivities;
         try
         {
-            // 테스트 출력, 라벨 카운트 기능 유지
-            Dictionary<string, int> labelCounts = new Dictionary<string, int>
+            if (progress)
             {
-                { "bug", 0 },
-                { "documentation", 0 },
-                { "typo", 0 }
-            };
-            string filePath = Path.Combine("output", repo, $"{repo}2.txt");
-            string directoryPath = Path.GetDirectoryName(filePath) ?? throw new InvalidOperationException($"Invalid file path: {filePath}");
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
+                Console.Write($"\r▶ 전체({repoIndex}/{totalRepos}) PR 및 Issue 불러오는 중...");
+                Console.Out.Flush();
             }
-            using (var writer = new StreamWriter(filePath))
+            userActivities = collector.Collect(since: since, until: until, useCache: useCache);
+            if (progress)
             {
-                writer.WriteLine($"=== {repo} Activities ===");
-                HashSet<string>? userSet = null;
-                if (includeUsers != null && includeUsers.Length > 0)
-                    userSet = new HashSet<string>(includeUsers, StringComparer.OrdinalIgnoreCase);
-                foreach (var kvp in userActivities)
-                {
-                    string userId = kvp.Key;
-                    UserActivity activity = kvp.Value;
-
-                    if (userSet != null && !userSet.Contains(userId))
-                        continue;
-
-                    writer.WriteLine($"User ID: {userId}");
-                    writer.WriteLine($"  PR_fb: {activity.PR_fb}");
-                    writer.WriteLine($"  PR_doc: {activity.PR_doc}");
-                    writer.WriteLine($"  PR_typo: {activity.PR_typo}");
-                    writer.WriteLine($"  IS_fb: {activity.IS_fb}");
-                    writer.WriteLine($"  IS_doc: {activity.IS_doc}");
-                    writer.WriteLine(); // 빈 줄
-
-                    // 라벨 카운트
-                    labelCounts["bug"] += activity.PR_fb + activity.IS_fb;
-                    labelCounts["documentation"] += activity.PR_doc + activity.IS_doc;
-                    labelCounts["typo"] += activity.PR_typo;
-                }
-            }
-            summaries.Add(($"{owner}/{repo}", labelCounts));
-
-            // 존재하지 않는 사용자에 대한 경고 메시지 출력
-            if (includeUsers != null && includeUsers.Length > 0)
-            {
-                var existingUsers = userActivities.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var missingUsers = includeUsers.Where(u => !existingUsers.Contains(u)).ToList();
-                if (missingUsers.Any())
-                {
-                    Console.WriteLine($"⚠️ 다음 사용자는 {owner}/{repo} 저장소에서 찾을 수 없습니다: {string.Join(", ", missingUsers)}\n");
-                }
+                Console.WriteLine(" OK");
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine($"! 오류 발생: {e.Message}");
+            if (progress)
+            {
+                Console.WriteLine(" 실패");
+            }
+            Console.WriteLine($"! 오류 발생: {ex.Message}");
             continue;
         }
 
+        if (!progress)
+            Console.WriteLine($"\n🔍 처리 중: {owner}/{repo}\n");
+
         try
         {
-            // ───────────────────────────────────────────────────────
-            // 3) 실제 format 기본값/유효성 검사 적용
-            // ───────────────────────────────────────────────────────
-            List<string> formats;
-            if (format == null || format.Length == 0)
+            Dictionary<string, int> labelCounts = new() {
+                { "bug", 0 }, { "documentation", 0 }, { "typo", 0 }
+            };
+
+            var rawScores = userActivities.ToDictionary(pair => pair.Key, pair => ScoreAnalyzer.FromActivity(pair.Value));
+            var finalScores = idToNameMap != null
+                ? rawScores.ToDictionary(
+                    kvp => idToNameMap.TryGetValue(kvp.Key, out var name) ? name : kvp.Key,
+                    kvp => kvp.Value,
+                    StringComparer.OrdinalIgnoreCase)
+                : rawScores;
+
+            // 🆕 total score 누적
+            foreach (var (user, score) in finalScores)
             {
-                formats = new List<string> { "text", "csv", "chart", "html" };
-            }
-            else
-            {
-                formats = checkFormat(format);
+                if (!totalScores.ContainsKey(user))
+                    totalScores[user] = score;
+                else
+                {
+                    var prev = totalScores[user];
+                    totalScores[user] = new UserScore(
+                        prev.PR_fb + score.PR_fb,
+                        prev.PR_doc + score.PR_doc,
+                        prev.PR_typo + score.PR_typo,
+                        prev.IS_fb + score.IS_fb,
+                        prev.IS_doc + score.IS_doc,
+                        prev.total + score.total
+                    );
+                }
             }
 
-            // ───────────────────────────────────────────────────────
-            // 4) 실제 outputDir 기본값 적용
-            // ───────────────────────────────────────────────────────
+            List<string> formats = (format == null || format.Length == 0)
+                ? new List<string> { "text", "csv", "chart", "html" }
+                : checkFormat(format);
+
             string outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
+            var generator = new FileGenerator(finalScores, repo, outputDir);
 
-    // C) ID→이름 치환: userInfoPath가 주어졌으면 매핑, 아니면 원래 ID 유지
-    var rawScores = userActivities.ToDictionary(pair => pair.Key, pair => ScoreAnalyzer.FromActivity(pair.Value));
-    var finalScores = idToNameMap != null
-        ? rawScores.ToDictionary(
-            kvp => idToNameMap.TryGetValue(kvp.Key, out var name) ? name : kvp.Key,
-            kvp => kvp.Value,
-            StringComparer.OrdinalIgnoreCase)
-        : rawScores;
-
-    var generator = new FileGenerator(finalScores, repo, outputDir);
-
-            if (formats.Contains("csv"))
-            {
-                generator.GenerateCsv();
-            }
-            if (formats.Contains("text"))
-            {
-                generator.GenerateTable();
-            }
-            if (formats.Contains("chart"))
-            {
-                generator.GenerateChart();
-            }
-            if (formats.Contains("html"))
-            {
-                Console.WriteLine("html 파일 생성이 아직 구현되지 않았습니다.");
-            }
+            if (formats.Contains("csv")) generator.GenerateCsv();
+            if (formats.Contains("text")) generator.GenerateTable();
+            if (formats.Contains("chart")) generator.GenerateChart();
+            if (formats.Contains("html")) Console.WriteLine("html 파일 생성이 아직 구현되지 않았습니다.");
+            if (showStateSummary) generator.GenerateStateSummary(collector.StateSummary);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"! 오류 발생: {ex.Message}");
         }
+
+        if (progress)
+            Console.WriteLine($"▶ 처리 중 ({repoIndex}/{totalRepos}): {owner}/{repo} 완료");
     }
 
-    // 전체 저장소 요약 테이블 출력
+    // 🆕 totalChart 출력
+    if (totalScores.Count > 0)
+    {
+        string outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
+        var totalGen = new FileGenerator(totalScores, "total", outputDir);
+        totalGen.GenerateChart();
+    }
+
     if (summaries.Count > 0)
     {
         Console.WriteLine("\n📊 전체 저장소 요약 통계");
@@ -325,62 +207,46 @@ CoconaApp.Run((
         }
     }
 
-    // ❗ 실패 저장소 요약 출력
     if (failedRepos.Count > 0)
     {
         Console.WriteLine("\n❌ 처리되지 않은 저장소 목록:");
-        foreach (var r in failedRepos)
-        {
-            Console.WriteLine($"- {r} (올바른 형식: owner/repo)");
-        }
+        foreach (var r in failedRepos) Console.WriteLine($"- {r} (올바른 형식: owner/repo)");
+    }
+
+    if (progress)
+    {
+        Console.WriteLine("완료");
     }
 });
 
 static List<string> checkFormat(string[] format)
 {
-    var FormatList = new List<string> { "text", "csv", "chart", "html", "all" }; // 유효한 format
-
+    var FormatList = new List<string> { "text", "csv", "chart", "html", "all" };
     var validFormats = new List<string> { };
     var unValidFormats = new List<string> { };
     char[] invalidChars = Path.GetInvalidFileNameChars();
 
     foreach (var fm in format)
     {
-        var f = fm.Trim().ToLowerInvariant(); // 대소문자 구분 없이 유효성 검사
+        var f = fm.Trim().ToLowerInvariant();
         if (f.IndexOfAny(invalidChars) >= 0)
         {
-            Console.WriteLine($"포맷 '{f}'에는 파일명으로 사용할 수 없는 문자가 포함되어 있습니다.");
-            Console.WriteLine("포맷 이름에서 다음 문자를 사용하지 마세요: " +
-                string.Join(" ", invalidChars.Select(c => $"'{c}'")));
+            Console.WriteLine($"포맷 '{f}'에는 사용할 수 없는 문자가 포함되어 있습니다.");
             Environment.Exit(1);
         }
-
-        if (FormatList.Contains(f))
-            validFormats.Add(f);
-        else
-            unValidFormats.Add(f);
+        if (FormatList.Contains(f)) validFormats.Add(f);
+        else unValidFormats.Add(f);
     }
 
-    // 유효하지 않은 포맷이 존재
     if (unValidFormats.Count != 0)
     {
-        Console.WriteLine("유효하지 않은 포맷이 존재합니다.");
-        Console.Write("유효하지 않은 포맷: ");
-        foreach (var unValidFormat in unValidFormats)
-        {
-            Console.Write($"{unValidFormat} ");
-        }
-        Console.Write("\n");
+        Console.WriteLine("유효하지 않은 포맷 존재: " + string.Join(", ", unValidFormats));
         Environment.Exit(1);
     }
 
-    // 추출한 리스트에 "all"이 존재할 경우 모든 포맷 리스트 반환
-    if (validFormats.Contains("all"))
-    {
-        return new List<string> { "text", "csv", "chart", "html" };
-    }
-
-    return validFormats;
+    return validFormats.Contains("all")
+        ? new List<string> { "text", "csv", "chart", "html" }
+        : validFormats;
 }
 
 static (string, string)? TryParseRepoPath(string repoPath)
@@ -388,9 +254,8 @@ static (string, string)? TryParseRepoPath(string repoPath)
     var parts = repoPath.Split('/');
     if (parts.Length != 2)
     {
-        Console.WriteLine($"⚠️ 저장소 인자 '{repoPath}'는 'owner/repo' 형식이어야 합니다. (예: oss2025hnu/reposcore-cs");
+        Console.WriteLine($"⚠️ 저장소 인자 '{repoPath}'는 'owner/repo' 형식이어야 합니다.");
         return null;
     }
-
     return (parts[0], parts[1]);
 }
