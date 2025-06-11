@@ -5,42 +5,29 @@ using System.IO;
 using System.Linq;
 using DotNetEnv;
 
-// GitHub 저장소 데이터를 수집하는 클래스입니다.
-// 저장소의 PR 및 이슈 데이터를 분석하고, 사용자별 활동 정보를 정리합니다.
-/// <summary>
-/// GitHub 저장소에서 이슈 및 PR 데이터를 수집하고 사용자별 활동 내역을 생성하는 클래스입니다.
-/// </summary>
-/// <remarks>
-/// 이 클래스는 Octokit 라이브러리를 사용하여 GitHub API로부터 데이터를 가져오며,
-/// 사용자 활동을 분석해 <see cref="UserActivity"/> 형태로 정리합니다.
-/// </remarks>
-/// <param name="owner">GitHub 저장소 소유자 (예: oss2025hnu)</param>
-/// <param name="repo">GitHub 저장소 이름 (예: reposcore-cs)</param>
 public class RepoDataCollector
 {
-    private static GitHubClient? _client; // GitHub API 요청에 사용할 클라이언트입니다.
-    private readonly string _owner; // 분석 대상 저장소의 owner (예: oss2025hnu)
-    private readonly string _repo; // 분석 대상 저장소의 이름 (예: reposcore-cs)
+    private static GitHubClient? _client;
+    private readonly string _owner;
+    private readonly string _repo;
+    private readonly bool _showApiLimit; // 
 
-    //수정에 용이하도록 수집데이터종류 전역변수화
     private static readonly string[] FeatureLabels = { "bug", "enhancement" };
     private static readonly string[] DocsLabels = { "documentation" };
     private static readonly string TypoLabel = "typo";
 
-    // 생성자에는 저장소 하나의 정보를 넘김
-    public RepoDataCollector(string owner, string repo)
+    // 생성자 수정: showApiLimit 매개변수 추가
+    public RepoDataCollector(string owner, string repo, bool showApiLimit = false)
     {
         _owner = owner;
         _repo = repo;
+        _showApiLimit = showApiLimit;
     }
 
-    // GitHubClient 초기화 메소드
     public static void CreateClient(string? token = null)
     {
         _client = new GitHubClient(new ProductHeaderValue("reposcore-cs"));
 
-        // 인증키 추가 (토큰이 있을경우)
-        // 토큰이 직접 전달된 경우: .env 갱신 후 인증 설정
         if (!string.IsNullOrEmpty(token))
         {
             try
@@ -71,14 +58,14 @@ public class RepoDataCollector
                 Env.Load();
                 token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
 
-                    if (string.IsNullOrEmpty(token))
-                    {
-                        Console.WriteLine("❗ .env 파일에는 GITHUB_TOKEN이 포함되어 있지 않습니다.");
-                    }
-                    else
-                    {
-                        _client.Credentials = new Credentials(token);
-                    }
+                if (string.IsNullOrEmpty(token))
+                {
+                    Console.WriteLine("❗ .env 파일에는 GITHUB_TOKEN이 포함되어 있지 않습니다.");
+                }
+                else
+                {
+                    _client.Credentials = new Credentials(token);
+                }
             }
             catch (Exception ex)
             {
@@ -91,22 +78,6 @@ public class RepoDataCollector
         }
     }
 
-    // 수집용 mutable 클래스 (Collect 메소드에서만 사용)
-  
-    /// <summary>
-    /// 지정된 저장소의 이슈 및 PR 데이터를 수집하여 사용자별 활동 내역을 반환합니다.
-    /// </summary>
-    /// <param name="returnDummyData">더미 데이터를 사용할지 여부 (테스트 용도)</param>
-    /// <param name="since">이 날짜 이후의 PR 및 이슈만 분석 (YYYY-MM-DD 형식)</param>
-    /// <param name="until">이 날짜까지의 PR 및 이슈만 분석 (YYYY-MM-DD 형식)</param>
-    /// <returns>
-    /// 사용자 로그인명을 키로 하고 활동 내역(UserActivity)을 값으로 갖는 Dictionary
-    /// </returns>
-    /// <exception cref="RateLimitExceededException">API 호출 한도 초과 시</exception>
-    /// <exception cref="AuthorizationException">인증 실패 시</exception>
-    /// <exception cref="NotFoundException">저장소를 찾을 수 없을 경우</exception>
-    /// <exception cref="Exception">기타 알 수 없는 예외 발생 시</exception>
-    // Collect 메소드
     public Dictionary<string, UserActivity> Collect(bool returnDummyData = false, string? since = null, string? until = null)
     {
         if (returnDummyData)
@@ -116,7 +87,6 @@ public class RepoDataCollector
 
         try
         {
-            // Issues수집 (RP포함)
             var request = new RepositoryIssueRequest
             {
                 State = ItemStateFilter.All
@@ -134,9 +104,22 @@ public class RepoDataCollector
                 }
             }
 
+            // API 한도 정보 시작 시 출력
+            if (_showApiLimit)
+            {
+                try
+                {
+                    var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
+                    Console.WriteLine($"🚀 [{_owner}/{_repo}] 분석 시작 전 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (시작 전): {ex.Message}");
+                }
+            }
+
             var allIssuesAndPRs = _client!.Issue.GetAllForRepository(_owner, _repo, request).Result;
 
-            // until 날짜 필터링 적용
             if (!string.IsNullOrEmpty(until))
             {
                 if (!DateTime.TryParse(until, out DateTime untilDate))
@@ -146,29 +129,26 @@ public class RepoDataCollector
                 allIssuesAndPRs = allIssuesAndPRs.Where(issue => issue.CreatedAt <= untilDate).ToList();
             }
 
-            // 수집용 mutable 객체. 모든 데이터 수집 후 레코드로 변환하여 반환
             var mutableActivities = new Dictionary<string, UserActivity>();
+            int count = 0; 
 
-            // allIssuesAndPRs의 데이터를 유저,라벨별로 분류
             foreach (var item in allIssuesAndPRs)
             {
                 if (item.User?.Login == null) continue;
 
                 var username = item.User.Login;
 
-                // 처음 기록하는 사용자 초기화
                 if (!mutableActivities.ContainsKey(username))
                 {
-                    mutableActivities[username] = new UserActivity(0,0,0,0,0);
+                    mutableActivities[username] = new UserActivity(0, 0, 0, 0, 0);
                 }
 
-                var labelName = item.Labels.Any() ? item.Labels[0].Name : null; // 라벨 구분을 위한 labelName
-
+                var labelName = item.Labels.Any() ? item.Labels[0].Name : null;
                 var activity = mutableActivities[username];
 
-                if (item.PullRequest != null) // PR일 경우
+                if (item.PullRequest != null)
                 {
-                    if (item.PullRequest.Merged) // 병합된 PR만 집계
+                    if (item.PullRequest.Merged)
                     {
                         if (FeatureLabels.Contains(labelName))
                             activity.PR_fb++;
@@ -181,18 +161,46 @@ public class RepoDataCollector
                 else
                 {
                     if (item.State.Value.ToString() == "Open" ||
-                        item.StateReason.ToString() == "completed") // 열려있거나 정상적으로 닫힌 이슈들만 집계
+                        item.StateReason.ToString() == "completed")
                     {
                         if (FeatureLabels.Contains(labelName))
                             activity.IS_fb++;
                         else if (DocsLabels.Contains(labelName))
                             activity.IS_doc++;
+                    }
+                }
 
+                count++;
+
+                // 20개마다 호출 한도 출력
+                if (_showApiLimit && count % 20 == 0)
+                {
+                    try
+                    {
+                        var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
+                        Console.WriteLine($"📡 [RateLimit] Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패: {ex.Message}");
                     }
                 }
             }
 
-            // 레코드로 변환
+            // API 한도 정보 종료 시 출력
+            if (_showApiLimit)
+            {
+                try
+                {
+                    var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
+                    Console.WriteLine($"✅ [{_owner}/{_repo}] 분석 종료 후 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
+                }
+            }
+
             var userActivities = new Dictionary<string, UserActivity>();
             foreach (var (key, value) in mutableActivities)
             {
@@ -213,14 +221,14 @@ public class RepoDataCollector
             {
                 var rateLimits = _client!.RateLimit.GetRateLimits().Result;
                 var coreRateLimit = rateLimits.Rate;
-                var resetTime = coreRateLimit.Reset; // UTC DateTime
+                var resetTime = coreRateLimit.Reset;
                 var secondsUntilReset = (int)(resetTime - DateTimeOffset.UtcNow).TotalSeconds;
 
-                Console.WriteLine($"❗[{_owner}/{_repo}] API 호출 한도(Rate Limit)를 초과했습니다. {secondsUntilReset}초 후 재시도 가능합니다 (약 {resetTime.LocalDateTime} 기준).");
+                Console.WriteLine($"❗[{_owner}/{_repo}] API 호출 한도 초과. {secondsUntilReset}초 후 재시도 가능 (약 {resetTime.LocalDateTime})");
             }
             catch (Exception innerEx)
             {
-                Console.WriteLine($"❗[{_owner}/{_repo}] API 호출 한도 초과, 재시도 시간을 가져오는 데 실패했습니다: {innerEx.Message}");
+                Console.WriteLine($"❗[{_owner}/{_repo}] 한도 초과 상태 조회 실패: {innerEx.Message}");
             }
 
             Environment.Exit(1);
@@ -237,9 +245,10 @@ public class RepoDataCollector
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❗[{_owner}/{_repo}] 알 수 없는 오류가 발생했습니다: {ex.Message}");
+            Console.WriteLine($"❗[{_owner}/{_repo}] 알 수 없는 오류: {ex.Message}");
             Environment.Exit(1);
         }
+
         return null!;
     }
 }
