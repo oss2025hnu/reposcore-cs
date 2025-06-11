@@ -10,13 +10,12 @@ public class RepoDataCollector
     private static GitHubClient? _client;
     private readonly string _owner;
     private readonly string _repo;
-    private readonly bool _showApiLimit; // 
+    private readonly bool _showApiLimit;
 
     private static readonly string[] FeatureLabels = { "bug", "enhancement" };
     private static readonly string[] DocsLabels = { "documentation" };
     private static readonly string TypoLabel = "typo";
 
-    // 생성자 수정: showApiLimit 매개변수 추가
     public RepoDataCollector(string owner, string repo, bool showApiLimit = false)
     {
         _owner = owner;
@@ -105,22 +104,24 @@ public class RepoDataCollector
             }
 
             // API 한도 정보 시작 시 출력
-           if (_showApiLimit)
-{
-    try
-    {
-        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
-        if (rate == null)
-            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
-        else
-            Console.WriteLine($"🚀 [{_owner}/{_repo}] 분석 시작 전 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (시작 전): {ex.Message}");
-    }
-}
-
+            if (_showApiLimit)
+            {
+                try
+                {
+                    var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+                    if (rate == null)
+                        Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+                    else
+                        Console.WriteLine($"🚀 [{_owner}/{_repo}] 분석 시작 전 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("Bad credentials"))
+                        Console.WriteLine("⚠️ 인증 토큰이 잘못되었습니다. 새로운 토큰을 발급받아 사용하세요.");
+                    else
+                        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (시작 전): {ex.Message}");
+                }
+            }
 
             var allIssuesAndPRs = _client!.Issue.GetAllForRepository(_owner, _repo, request).Result;
 
@@ -134,7 +135,7 @@ public class RepoDataCollector
             }
 
             var mutableActivities = new Dictionary<string, UserActivity>();
-            int count = 0; 
+            int count = 0;
 
             foreach (var item in allIssuesAndPRs)
             {
@@ -175,42 +176,47 @@ public class RepoDataCollector
                 }
 
                 count++;
-            }
+
                 // 20개마다 호출 한도 출력
                 if (_showApiLimit && count % 20 == 0)
-{
-    try
-    {
-        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
-        if (rate == null)
-            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
-        else
-            Console.WriteLine($"📡 [RateLimit] Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패: {ex.Message}");
-    }
-}
-
+                {
+                    try
+                    {
+                        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+                        if (rate == null)
+                            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+                        else
+                            Console.WriteLine($"📡 [RateLimit] Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("Bad credentials"))
+                            Console.WriteLine("⚠️ 인증 토큰이 잘못되었습니다. 새로운 토큰을 발급받아 사용하세요.");
+                        else
+                            Console.WriteLine($"⚠️ RateLimit 정보 조회 실패: {ex.Message}");
+                    }
+                }
+            }
 
             // API 한도 정보 종료 시 출력
-           if (_showApiLimit)
-{
-    try
-    {
-        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
-        if (rate == null)
-            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
-        else
-            Console.WriteLine($"✅ [{_owner}/{_repo}] 분석 종료 후 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
-    }
-}
-
+            if (_showApiLimit)
+            {
+                try
+                {
+                    var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+                    if (rate == null)
+                        Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+                    else
+                        Console.WriteLine($"✅ [{_owner}/{_repo}] 분석 종료 후 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("Bad credentials"))
+                        Console.WriteLine("⚠️ 인증 토큰이 잘못되었습니다. 새로운 토큰을 발급받아 사용하세요.");
+                    else
+                        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
+                }
+            }
 
             var userActivities = new Dictionary<string, UserActivity>();
             foreach (var (key, value) in mutableActivities)
@@ -239,24 +245,30 @@ public class RepoDataCollector
             }
             catch (Exception innerEx)
             {
-                Console.WriteLine($"❗[{_owner}/{_repo}] 한도 초과 상태 조회 실패: {innerEx.Message}");
+                if (innerEx.Message.Contains("Bad credentials"))
+                    Console.WriteLine("⚠️ 인증 토큰이 잘못되었습니다. 새로운 토큰을 발급받아 사용하세요.");
+                else
+                    Console.WriteLine($"❗[{_owner}/{_repo}] 한도 초과 상태 조회 실패: {innerEx.Message}");
             }
 
             Environment.Exit(1);
         }
         catch (AuthorizationException)
         {
-            Console.WriteLine("❗[{_owner}/{_repo}] 인증 실패: 올바른 토큰을 사용했는지 확인하세요.");
+            Console.WriteLine($"❗[{_owner}/{_repo}] 인증 실패: 올바른 토큰을 사용했는지 확인하세요.");
             Environment.Exit(1);
         }
         catch (NotFoundException)
         {
-            Console.WriteLine("❗[{_owner}/{_repo}] 저장소를 찾을 수 없습니다. owner/repo 이름을 확인하세요.");
+            Console.WriteLine($"❗[{_owner}/{_repo}] 저장소를 찾을 수 없습니다. owner/repo 이름을 확인하세요.");
             Environment.Exit(1);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❗[{_owner}/{_repo}] 알 수 없는 오류: {ex.Message}");
+            if (ex.Message.Contains("Bad credentials"))
+                Console.WriteLine("⚠️ 인증 토큰이 잘못되었습니다. 새로운 토큰을 발급받아 사용하세요.");
+            else
+                Console.WriteLine($"❗[{_owner}/{_repo}] 알 수 없는 오류: {ex.Message}");
             Environment.Exit(1);
         }
 
