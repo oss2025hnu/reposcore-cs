@@ -5,28 +5,44 @@ using System.IO;
 using System.Linq;
 using DotNetEnv;
 
+// GitHub 저장소 데이터를 수집하는 클래스입니다.
+// 저장소의 PR 및 이슈 데이터를 분석하고, 사용자별 활동 정보를 정리합니다.
+/// <summary>
+/// GitHub 저장소에서 이슈 및 PR 데이터를 수집하고 사용자별 활동 내역을 생성하는 클래스입니다.
+/// </summary>
+/// <remarks>
+/// 이 클래스는 Octokit 라이브러리를 사용하여 GitHub API로부터 데이터를 가져오며,
+/// 사용자 활동을 분석해 <see cref="UserActivity"/> 형태로 정리합니다.
+/// </remarks>
+/// <param name="owner">GitHub 저장소 소유자 (예: oss2025hnu)</param>
+/// <param name="repo">GitHub 저장소 이름 (예: reposcore-cs)</param>
 public class RepoDataCollector
 {
-    private static GitHubClient? _client;
-    private readonly string _owner;
-    private readonly string _repo;
+    private static GitHubClient? _client; // GitHub API 요청에 사용할 클라이언트입니다.
+    private readonly string _owner; // 분석 대상 저장소의 owner (예: oss2025hnu)
+    private readonly string _repo; // 분석 대상 저장소의 이름 (예: reposcore-cs)
     private readonly bool _showApiLimit;
 
+     //수정에 용이하도록 수집데이터종류 전역변수화
     private static readonly string[] FeatureLabels = { "bug", "enhancement" };
     private static readonly string[] DocsLabels = { "documentation" };
     private static readonly string TypoLabel = "typo";
 
+    // 생성자에는 저장소 하나의 정보를 넘김
     public RepoDataCollector(string owner, string repo, bool showApiLimit = false)
     {
         _owner = owner;
         _repo = repo;
         _showApiLimit = showApiLimit;
     }
-
+    
+    // GitHubClient 초기화 메소드
     public static void CreateClient(string? token = null)
     {
         _client = new GitHubClient(new ProductHeaderValue("reposcore-cs"));
 
+        // 인증키 추가 (토큰이 있을경우)
+        // 토큰이 직접 전달된 경우: .env 갱신 후 인증 설정
         if (!string.IsNullOrEmpty(token))
         {
             try
@@ -217,7 +233,7 @@ public class RepoDataCollector
                         Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
                 }
             }
-
+            // 레코드로 변환
             var userActivities = new Dictionary<string, UserActivity>();
             foreach (var (key, value) in mutableActivities)
             {
