@@ -168,7 +168,11 @@ CoconaApp.Run((
                 ? new List<string> { "text", "csv", "chart", "html" }
                 : checkFormat(format);
 
-            string outputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
+            string baseOutputDir = string.IsNullOrWhiteSpace(output) ? "output" : output;
+            string repoSubDir = $"{owner}_{repo}".Replace('/', '_'); // / → _ 변환
+            string outputDir = Path.Combine(baseOutputDir, repoSubDir);
+            Directory.CreateDirectory(outputDir); // 폴더 없으면 생성
+
             var generator = new FileGenerator(finalScores, repo, outputDir);
 
             if (formats.Contains("csv")) generator.GenerateCsv();
