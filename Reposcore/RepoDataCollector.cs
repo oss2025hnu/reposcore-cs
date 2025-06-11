@@ -169,6 +169,7 @@ public class RepoDataCollector
 
                 if (item.PullRequest != null)
                 {
+                    // PR인 경우
                     if (item.PullRequest.Merged)
                     {
                         if (FeatureLabels.Contains(labelName))
@@ -181,6 +182,7 @@ public class RepoDataCollector
                 }
                 else
                 {
+                     // 이슈인 경우
                     if (item.State.Value.ToString() == "Open" ||
                         item.StateReason.ToString() == "completed")
                     {
@@ -249,7 +251,8 @@ public class RepoDataCollector
             return userActivities;
         }
         catch (RateLimitExceededException)
-        {
+        { 
+            // 예외 처리: API 한도 초과, 인증 실패, 저장소 없음, 기타 오류
             try
             {
                 var rateLimits = _client!.RateLimit.GetRateLimits().Result;
