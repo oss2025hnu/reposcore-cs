@@ -14,7 +14,8 @@ CoconaApp.Run((
     [Option("since", Description = "이 날짜 이후의 PR 및 이슈만 분석 (YYYY-MM-DD)", ValueName = "Start date")] string? since,
     [Option("until", Description = "이 날짜까지의 PR 및 이슈만 분석 (YYYY-MM-DD)", ValueName = "End date")] string? until,
     [Option("user-info", Description = "ID→이름 매핑 JSON/CSV 파일 경로")] string? userInfoPath,
-    [Option("use-cache", Description = "캐시된 데이터를 사용합니다.")] bool useCache = false
+    [Option("use-cache", Description = "캐시된 데이터를 사용합니다.")] bool useCache = false,
+    [Option("progress-api-limit", Description = "GitHub API 호출 한도 상태를 주기적으로 출력합니다.")] bool showApiLimit = false
 ) =>
 {
     // 캐시 디렉토리 생성
@@ -115,7 +116,7 @@ CoconaApp.Run((
         if (userActivities == null)
         {
             // collector 생성
-            var collector = new RepoDataCollector(owner, repo);
+           var collector = new RepoDataCollector(owner, repo, showApiLimit: showApiLimit);
 
             // 데이터 수집
             userActivities = collector.Collect(since: since, until: until);
