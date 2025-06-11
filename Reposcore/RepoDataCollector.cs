@@ -105,18 +105,22 @@ public class RepoDataCollector
             }
 
             // API 한도 정보 시작 시 출력
-            if (_showApiLimit)
-            {
-                try
-                {
-                    var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
-                    Console.WriteLine($"🚀 [{_owner}/{_repo}] 분석 시작 전 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (시작 전): {ex.Message}");
-                }
-            }
+           if (_showApiLimit)
+{
+    try
+    {
+        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+        if (rate == null)
+            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+        else
+            Console.WriteLine($"🚀 [{_owner}/{_repo}] 분석 시작 전 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (시작 전): {ex.Message}");
+    }
+}
+
 
             var allIssuesAndPRs = _client!.Issue.GetAllForRepository(_owner, _repo, request).Result;
 
@@ -174,32 +178,39 @@ public class RepoDataCollector
 
                 // 20개마다 호출 한도 출력
                 if (_showApiLimit && count % 20 == 0)
-                {
-                    try
-                    {
-                        var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
-                        Console.WriteLine($"📡 [RateLimit] Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패: {ex.Message}");
-                    }
-                }
-            }
+{
+    try
+    {
+        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+        if (rate == null)
+            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+        else
+            Console.WriteLine($"📡 [RateLimit] Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패: {ex.Message}");
+    }
+}
+
 
             // API 한도 정보 종료 시 출력
-            if (_showApiLimit)
-            {
-                try
-                {
-                    var rate = _client!.RateLimit.GetRateLimits().Result.Rate;
-                    Console.WriteLine($"✅ [{_owner}/{_repo}] 분석 종료 후 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
-                }
-            }
+           if (_showApiLimit)
+{
+    try
+    {
+        var rate = _client?.RateLimit.GetRateLimits().Result.Rate;
+        if (rate == null)
+            Console.WriteLine("⚠️ 인증되지 않아 RateLimit 정보를 출력할 수 없습니다.");
+        else
+            Console.WriteLine($"✅ [{_owner}/{_repo}] 분석 종료 후 RateLimit: Remaining={rate.Remaining}, Reset={rate.Reset.LocalDateTime}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ RateLimit 정보 조회 실패 (종료 후): {ex.Message}");
+    }
+}
+
 
             var userActivities = new Dictionary<string, UserActivity>();
             foreach (var (key, value) in mutableActivities)
