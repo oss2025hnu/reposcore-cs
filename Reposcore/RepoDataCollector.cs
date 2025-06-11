@@ -175,7 +175,7 @@ public class RepoDataCollector
                 }
 
                 count++;
-
+            }
                 // 20개마다 호출 한도 출력
                 if (_showApiLimit && count % 20 == 0)
 {
