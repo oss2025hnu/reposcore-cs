@@ -271,3 +271,36 @@ static (string, string)? TryParseRepoPath(string repoPath)
     }
     return (parts[0], parts[1]);
 }
+
+public class UserScore
+{
+    public int total;
+    public int prFeature;
+    public int prDocs;
+    public int prTypos;
+    public int issueFeature;
+    public int issueDocs;
+
+    public void Add(UserScore other)
+    {
+        this.total += other.total;
+        this.prFeature += other.prFeature;
+        this.prDocs += other.prDocs;
+        this.prTypos += other.prTypos;
+        this.issueFeature += other.issueFeature;
+        this.issueDocs += other.issueDocs;
+    }
+
+    public UserScore Clone()
+    {
+        return new UserScore
+        {
+            total = this.total,
+            prFeature = this.prFeature,
+            prDocs = this.prDocs,
+            prTypos = this.prTypos,
+            issueFeature = this.issueFeature,
+            issueDocs = this.issueDocs
+        };
+    }
+}
