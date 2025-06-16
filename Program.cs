@@ -135,8 +135,19 @@ CoconaApp.Run((
         {
             var analyzer = new ScoreAnalyzer(userActivities, idToNameMap);
             var scores = analyzer.Analyze();
-            totalScores = analyzer.TotalAnalyze(scores);
+            var currentRepoScores = analyzer.TotalAnalyze(scores);
 
+            foreach (var kvp in currentRepoScores)
+            {
+                if (totalScores.ContainsKey(kvp.Key))
+                {
+                    totalScores[kvp.Key].Add(kvp.Value);
+                }
+                else
+                {
+                    totalScores[kvp.Key] = kvp.Value.Clone();
+                }
+            }
             if (string.IsNullOrEmpty(singleUser))
             {
                 List<string> formats = (format == null || format.Length == 0)
